@@ -1,0 +1,103 @@
+{
+    "title": "Index",
+    "description": "Set-up index specific parameters.",
+    "type": "object",
+    "required": [
+        "index_name",
+        "request_body",
+        "date",
+        "storage_table",
+        "primary_keys",
+        "incremental"
+    ],
+    "properties": {
+        "index_name": {
+            "title": "Index Name",
+            "description": "Specify name of the index, which will be downloaded from ElasticSearch instance. Use placeholder <strong>{{date}}</strong> to replace the placeholder with date value.",
+            "type": "string",
+            "propertyOrder": 100
+        },
+        "request_body": {
+            "title": "Request Body",
+            "description": "Request body (in JSON), which will be sent together with a request. Allows to specify returned columns and other useful parameters. See <a href='https://www.elastic.co/guide/en/elasticsearch/reference/7.x/search-search.html#search-search-api-request-body' target='_blank'>Search API documentation</a> for all possible attributes.",
+            "type": "string",
+            "format": "textarea",
+            "options": {
+                "input_height": "100px"
+            },
+            "propertyOrder": 200
+        },
+        "date": {
+            "title": "Date Settings",
+            "type": "object",
+            "required": [
+                "append_date",
+                "shift",
+                "format"
+            ],
+            "propertyOrder": 300,
+            "format": "grid-strict",
+            "properties": {
+                "append_date": {
+                    "title": "Append date",
+                    "description": "If set to true, the <strong>{{date}}</strong> date placeholder will be replaced by specified date.",
+                    "type": "boolean",
+                    "propertyOrder": 100,
+                    "default": false,
+                    "options": {
+                        "grid_columns": 4
+                    }
+                },
+                "shift": {
+                    "title": "Date Shift",
+                    "description": "Specify date in absolute format (YYYY-MM-DD) or relative format (yesterday, 3 days ago, etc.).",
+                    "type": "string",
+                    "propertyOrder": 200,
+                    "options": {
+                        "grid_columns": 4
+                    }
+                },
+                "format": {
+                    "title": "Date Format",
+                    "description": "Specifies the date format, in which the date placeholder will be replaced. See <a href='https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes' target='_blank'>strftime</a> documentation for supported formats.",
+                    "type": "string",
+                    "default": "%Y-%m-%d",
+                    "propertyOrder": 300,
+                    "options": {
+                        "grid_columns": 4
+                    }
+                }
+
+            }
+        },
+        "storage_table": {
+            "title": "Output Table Name",
+            "description": "Name of the output table in storage.",
+            "type": "string",
+            "propertyOrder": 400
+        },
+        "primary_keys": {
+            "title": "Primary Keys",
+            "description": "Specify primary keys for the storage table.",
+            "type": "array",
+            "propertyOrder": 500,
+            "items": {
+                "type": "string",
+                "title": "Column"
+            }
+        },
+        "incremental": {
+            "title": "Load Type",
+            "description": "Whether to load data into storage incrementally, or utilizing the full load.",
+            "type": "boolean",
+            "default": true,
+            "propertyOrder": 600,
+            "options": {
+                "enum_titles":[
+                    "Incremental Load",
+                    "Full Load"
+                ]
+            }
+        }
+    }
+}

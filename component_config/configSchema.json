@@ -1,1 +1,76 @@
-{}
+{
+    "title": "DB & SSH Settings",
+    "description": "Set-up shared database and SSH settings.",
+    "type": "object",
+    "required": [
+        "db",
+        "ssh"
+    ],
+    "properties": {
+        "db": {
+            "title": "Database",
+            "type": "object",
+            "required": [
+                "hostname",
+                "port"
+            ],
+            "propertyOrder": 100,
+            "properties": {
+                "hostname": {
+                    "title": "Hostname",
+                    "type": "string",
+                    "propertyOrder": 100
+                },
+                "port": {
+                    "title": "Port",
+                    "type": "integer",
+                    "propertyOrder": 200
+                }
+            }
+        },
+        "ssh": {
+            "title": "SSH",
+            "type": "object",
+            "required": [
+                "use_ssh",
+                "hostname",
+                "port",
+                "username",
+                "#private_key"
+            ],
+            "propertyOrder": 200,
+            "properties": {
+                "use_ssh": {
+                    "title": "Use SSH",
+                    "type": "boolean",
+                    "default": false,
+                    "propertyOrder": 100
+                },
+                "hostname": {
+                    "title": "SSH Hostname",
+                    "type": "string",
+                    "propertyOrder": 200
+                },
+                "port": {
+                    "title": "SSH Port",
+                    "type": "integer",
+                    "propertyOrder": 300
+                },
+                "username": {
+                    "title": "SSH Username",
+                    "type": "string",
+                    "propertyOrder": 400
+                },
+                "#private_key": {
+                    "title": "SSH Private Key",
+                    "type": "string",
+                    "propertyOrder": 500,
+                    "format": "textarea",
+                    "options": {
+                        "input_height": "120px"
+                    }
+                }
+            }
+        }
+    }
+}
