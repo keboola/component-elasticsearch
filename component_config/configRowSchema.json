@@ -1,6 +1,5 @@
 {
     "title": "Index",
-    "description": "Set-up index specific parameters.",
     "type": "object",
     "required": [
         "index_name",

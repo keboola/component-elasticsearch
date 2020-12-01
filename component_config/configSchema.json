@@ -1,5 +1,5 @@
 {
-    "title": "DB & SSH Settings",
+    "title": "DB & SSH",
     "description": "Set-up shared database and SSH settings.",
     "type": "object",
     "required": [

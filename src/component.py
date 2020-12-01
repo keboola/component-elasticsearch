@@ -8,7 +8,7 @@ from client import SshClient  # noqa
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '0.0.1'
+COMPONENT_VERSION = '0.0.2'
 
 KEY_INDEX_NAME = 'index_name'
 KEY_REQUEST_BODY = 'request_body'
@@ -34,7 +34,7 @@ KEY_DB_PORT = 'port'
 
 KEY_DEBUG = 'debug'
 
-MANDATORY_PARAMS = [KEY_INDEX_NAME, KEY_DB, KEY_INCREMENTAL]
+MANDATORY_PARAMS = [KEY_INDEX_NAME, KEY_DB, KEY_STORAGE_TABLE]
 
 
 @dataclass
@@ -55,7 +55,7 @@ class Component(KBCEnvHandler):
 
     def __init__(self):
 
-        super().__init__(mandatory_params=MANDATORY_PARAMS, log_level='INFO', data_path='./data')
+        super().__init__(mandatory_params=MANDATORY_PARAMS, log_level='INFO')
 
         logging.info(f"Running component version {COMPONENT_VERSION}.")
 
