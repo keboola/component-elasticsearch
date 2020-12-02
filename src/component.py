@@ -8,7 +8,8 @@ from client import SshClient  # noqa
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '0.0.2'
+COMPONENT_VERSION = '0.0.3'
+sys.tracebacklimit = 0
 
 KEY_INDEX_NAME = 'index_name'
 KEY_REQUEST_BODY = 'request_body'
@@ -133,7 +134,8 @@ class Component(KBCEnvHandler):
 
             if '{{date}}' in index:
                 index = index.replace('{{date}}', _date_formatted)
-                logging.info(f"Replaced date placeholder with value {_date_formatted}.")
+                logging.info(f"Replaced date placeholder with value {_date_formatted}. " +
+                             f"Downloading data from index {index}.")
 
             else:
                 logging.warn(f"No date placeholder found in index name {index}.")
@@ -194,7 +196,7 @@ class Component(KBCEnvHandler):
         else:
             _scroll_id, _nr_results, _results = self.parse_scroll(stdout_body)
 
-        logging.debug(f"{_nr_results} rows will be downloaded from index {self.index}.")
+        logging.info(f"{_nr_results} rows will be downloaded from index {self.index}.")
         all_results += [self.writer.flatten_json(r) for r in _results]
 
         if len(_results) < self.client.REQUEST_SIZE:
