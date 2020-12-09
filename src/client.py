@@ -11,7 +11,8 @@ Headers = List[Tuple[str, str]]
 
 class SshClient:
 
-    REQUEST_SIZE = 1000
+    REQUEST_SIZE = 2000
+    DEFAULT_SCROLL = '5m'
 
     def __init__(self, SshTunnel, Database):
 
@@ -87,7 +88,7 @@ class SshClient:
 
         db_url = furl(f'{self.db.host}:{self.db.port}')
         db_url /= f'{index}/_search'
-        db_url.args['scroll'] = '1m'
+        db_url.args['scroll'] = self.DEFAULT_SCROLL
 
         parameters['size'] = self.REQUEST_SIZE
 
@@ -103,7 +104,7 @@ class SshClient:
         db_url = furl(f'{self.db.host}:{self.db.port}')
         db_url /= '_search/scroll'
 
-        data = {'scroll': '1m', 'scroll_id': scroll_id}
+        data = {'scroll': self.DEFAULT_SCROLL, 'scroll_id': scroll_id}
 
         curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], data)
 

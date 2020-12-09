@@ -22,7 +22,7 @@
             "type": "string",
             "format": "textarea",
             "options": {
-                "input_height": "100px"
+                "input_height": "150px"
             },
             "propertyOrder": 200
         },
@@ -38,7 +38,7 @@
             "format": "grid-strict",
             "properties": {
                 "append_date": {
-                    "title": "Append date",
+                    "title": "Replace Date",
                     "description": "If set to true, the <strong>{{date}}</strong> date placeholder will be replaced by specified date.",
                     "type": "boolean",
                     "propertyOrder": 100,
@@ -54,7 +54,8 @@
                     "propertyOrder": 200,
                     "options": {
                         "grid_columns": 4
-                    }
+                    },
+                    "default": "yesterday"
                 },
                 "format": {
                     "title": "Date Format",

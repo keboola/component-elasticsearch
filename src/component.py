@@ -4,11 +4,11 @@ import logging
 import sys
 
 from dataclasses import dataclass
-from client import SshClient  # noqa
+from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '0.0.3'
+COMPONENT_VERSION = '1.0.0'
 sys.tracebacklimit = 0
 
 KEY_INDEX_NAME = 'index_name'
@@ -53,6 +53,8 @@ class Database:
 
 
 class Component(KBCEnvHandler):
+
+    BATCH_PROCESSING_SIZE = 300000
 
     def __init__(self):
 
@@ -202,6 +204,7 @@ class Component(KBCEnvHandler):
         if len(_results) < self.client.REQUEST_SIZE:
             is_complete = True
 
+        already_written = 0
         while is_complete is False:
 
             _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
@@ -228,9 +231,14 @@ class Component(KBCEnvHandler):
             if len(_results) < self.client.REQUEST_SIZE:
                 is_complete = True
 
-        logging.info(f"Downloaded all data for index {self.index}. Parsing results.")
-        logging.debug(f"Downloaded {len(all_results)} rows.")
+            if ((_results_len := len(all_results)) >= self.BATCH_PROCESSING_SIZE) or is_complete is True:
+                self.writer.write_results(all_results, is_complete=is_complete)
+                all_results = []
+                already_written += _results_len
 
-        self.writer.write_results(all_results)
+                logging.debug(f"Parsed {already_written} results so far.")
+
+        logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
+        self.writer.create_manifest(self.writer.result_schema, self.writer.incremental, self.writer.primary_keys)
 
         logging.info("Component finished.")

@@ -18,6 +18,9 @@ class Writer:
 
         self.incremental = bool(incremental)
         self.table_path = path
+        self.result_schema = None
+
+        self.io = open(os.path.join(self.table_path, self.table_name), 'w')
 
         if isinstance(primary_keys, List) is False:
             logging.error("Primary keys must be provided as an array.")
@@ -54,26 +57,26 @@ class Writer:
 
     def _write_results(self, results):
 
-        logging.info("Parsing results.")
+        if self.result_schema is None:
 
-        available_columns = []
-        for res in results:
-            for key in res.keys():
-                if key not in available_columns:
-                    available_columns += [key]
-                else:
-                    pass
+            available_columns = []
+            for res in results:
+                for key in res.keys():
+                    if key not in available_columns:
+                        available_columns += [key]
+                    else:
+                        pass
 
-        with open(os.path.join(self.table_path, self.table_name), 'w') as csv_out:
+            self.result_schema = available_columns
 
-            _writer = csv.DictWriter(csv_out, fieldnames=available_columns, extrasaction='ignore',
-                                     restval='', quoting=csv.QUOTE_ALL, quotechar='\"')
+        _writer = csv.DictWriter(self.io, fieldnames=self.result_schema, extrasaction='raise',
+                                 restval='', quoting=csv.QUOTE_ALL, quotechar='\"')
 
-            _writer.writerows(results)
+        _writer.writerows(results)
 
-        return available_columns
+    def write_results(self, results, is_complete=False):
 
-    def write_results(self, results):
+        self._write_results(results)
 
-        _columns = self._write_results(results)
-        self.create_manifest(_columns, self.incremental, self.primary_keys)
+        if is_complete is True:
+            self.io.close()
