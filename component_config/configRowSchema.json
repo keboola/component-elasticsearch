@@ -12,7 +12,7 @@
     "properties": {
         "index_name": {
             "title": "Index Name",
-            "description": "Specify name of the index, which will be downloaded from ElasticSearch instance. Use placeholder <strong>{{date}}</strong> to replace the placeholder with date value.",
+            "description": "Specify a name of the index, which will be downloaded from Elasticsearch instance. Use placeholder <strong>{{date}}</strong> to replace the placeholder with date value.",
             "type": "string",
             "propertyOrder": 100
         },
@@ -39,7 +39,7 @@
             "properties": {
                 "append_date": {
                     "title": "Replace Date",
-                    "description": "If set to true, the <strong>{{date}}</strong> date placeholder will be replaced by specified date.",
+                    "description": "If set to true, the <strong>{{date}}</strong> date placeholder will be replaced by a specified date.",
                     "type": "boolean",
                     "propertyOrder": 100,
                     "default": false,
