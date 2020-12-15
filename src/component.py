@@ -8,7 +8,7 @@ from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.0.0'
+COMPONENT_VERSION = '1.0.1'
 sys.tracebacklimit = 0
 
 KEY_INDEX_NAME = 'index_name'
