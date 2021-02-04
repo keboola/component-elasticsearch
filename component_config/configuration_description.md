@@ -4,16 +4,11 @@ In Keboola, the component is set up as a row-based component and thus certain pa
 
 ## Database and SSH Settings
 
-Elasticsearch extractor offers two modes of connecting to the Elasticsearch instance:
-
-- directly, or
-- over SSH.
-
-If you choose to connect to the database directly, only database host and port need to be specified. If you choose to connect over SSH, in addition to DB host and port, SSH host, port, username and private key need to be provided as well. The `Use SSH` parameter should be set to `true` as well.
+Elasticsearch extractor currently supports only connection to the Elasticsearch instance over SSH tunnel. For successful connection, all database and SSH properties must be configured.
 
 ### Database (`db`) settings
 
-Whether you choose direct connection or connection over SSH, the database host and port need to be provided to correctly connect to the engine and download index data.
+The database host and port need to be provided to correctly connect to the engine and download index data.
 
 Required parameters are:
 
@@ -35,7 +30,7 @@ The correct JSON specification of the database settings then takes the following
 
 ### SSH (`ssh`) settings
 
-Connection to the Elasticsearch instance via an SSH server is supported by the extractor. In order to use the extractor, the **Use SSH** (`ssh.use_ssh`) flag should be set to `true`.
+Connection to the Elasticsearch instance via an SSH server is supported by the extractor
 
 Required parameters for SSH section of the configuration are:
 

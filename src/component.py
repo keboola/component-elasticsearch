@@ -8,7 +8,7 @@ from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.0.1'
+COMPONENT_VERSION = '1.0.2'
 sys.tracebacklimit = 0
 
 KEY_INDEX_NAME = 'index_name'
@@ -85,11 +85,11 @@ class Component(KBCEnvHandler):
 
         ssh_config = self.cfg_params.get(KEY_SSH, {})
 
-        if ssh_config == {} or ssh_config.get(KEY_SSH_USE) is False:
+        if ssh_config == {}:  # or ssh_config.get(KEY_SSH_USE) is False:
 
-            logging.info("SSH not specified or not enabled. Using standard method.")
-            logging.error("Method not implemented.")
-            sys.exit(2)
+            logging.info("SSH configuration not specified.")
+            # logging.error("Method not implemented.")
+            sys.exit(1)
 
         else:
 
@@ -147,7 +147,7 @@ class Component(KBCEnvHandler):
 
         except ValueError:
             logging.exception("Could not parse request body string to JSON.")
-            sys.exit
+            sys.exit(1)
 
         return index, request_body
 
@@ -168,7 +168,7 @@ class Component(KBCEnvHandler):
             logging.exception(f"Could not parse JSON response - {e}.")
             sys.exit(1)
 
-        return scroll_json['_scroll_id'], scroll_json['hits']['total'], scroll_json['hits']['hits']
+        return scroll_json.get('_scroll_id'), scroll_json['hits']['total'], scroll_json['hits']['hits']
 
     def run(self):
 

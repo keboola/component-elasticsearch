@@ -40,12 +40,6 @@
             ],
             "propertyOrder": 200,
             "properties": {
-                "use_ssh": {
-                    "title": "Use SSH",
-                    "type": "boolean",
-                    "default": false,
-                    "propertyOrder": 100
-                },
                 "hostname": {
                     "title": "SSH Hostname",
                     "type": "string",
