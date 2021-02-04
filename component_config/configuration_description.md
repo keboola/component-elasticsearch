@@ -34,7 +34,6 @@ Connection to the Elasticsearch instance via an SSH server is supported by the e
 
 Required parameters for SSH section of the configuration are:
 
-- **Use SSH** (`ssh.use_ssh`) - a boolean value marking, whether the SSH shall be used;
 - **SSH Hostname** (`ssh.hostname`) - a SSH host, to which a connection shall be made;
 - **SSH Port** (`ssh.port`) - an accompanying SSH port to `ssh.hostname`;
 - **SSH Username** (`ssh.username`) - a user, which will be used for SSH authentication;
@@ -49,8 +48,7 @@ The final SSH configuration should then look like the one below.
       "hostname": "ssh-host-url.cz",
       "port": 22,
       "username": "user-ssh",
-      "#private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END OPENSSH PRIVATE KEY-----",
-      "use_ssh": true
+      "#private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END OPENSSH PRIVATE KEY-----"
     }
   ...
 }
