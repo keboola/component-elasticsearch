@@ -2,6 +2,7 @@ import json
 import logging
 import paramiko
 import io
+import socket
 
 from furl import furl
 from typing import List, Tuple
@@ -25,8 +26,12 @@ class SshClient:
         # Set up SSH paramiko client
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(hostname=SshTunnel.hostname, port=SshTunnel.port,
-                         username=SshTunnel.username, pkey=pkey)
+        try:
+            self.ssh.connect(hostname=SshTunnel.hostname, port=SshTunnel.port,
+                             username=SshTunnel.username, pkey=pkey)
+        except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
+            logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
+            raise
 
         self.db = Database
 
@@ -39,6 +44,9 @@ class SshClient:
         except paramiko.SSHException:
             logging.warning("RSS Private key invalid, trying DSS.")
             failed = True
+        except IndexError:
+            logging.exception("Could not read RSS Private Key - have you provided it correctly?")
+            raise
         # DSS
         if failed:
             try:

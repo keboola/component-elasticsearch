@@ -65,6 +65,7 @@ class Component(KBCEnvHandler):
         if self.cfg_params.get('debug', False) is True:
             logger = logging.getLogger()
             logger.setLevel(level='DEBUG')
+            sys.tracebacklimit = 5
 
         try:
             self.validate_config(MANDATORY_PARAMS)
@@ -76,7 +77,9 @@ class Component(KBCEnvHandler):
         _db_object = self._parse_db_parameters()
         _ssh_object = self._parse_ssh_parameters()
         self.index, self.index_params = self._parse_index_parameters()
+
         self.client = SshClient(_ssh_object, _db_object)
+
         self.writer = Writer(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
                              self.cfg_params.get(KEY_INCREMENTAL, True),
                              self.cfg_params.get(KEY_PRIMARY_KEYS, []))
