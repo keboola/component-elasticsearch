@@ -3,6 +3,7 @@ import logging
 import paramiko
 import io
 import socket
+import sys
 
 from furl import furl
 from typing import List, Tuple
@@ -31,7 +32,7 @@ class SshClient:
                              username=SshTunnel.username, pkey=pkey)
         except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
             logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
-            raise
+            sys.exit(1)
 
         self.db = Database
 
@@ -46,7 +47,7 @@ class SshClient:
             failed = True
         except IndexError:
             logging.exception("Could not read RSS Private Key - have you provided it correctly?")
-            raise
+            sys.exit(1)
         # DSS
         if failed:
             try:
@@ -55,6 +56,9 @@ class SshClient:
             except paramiko.SSHException:
                 logging.warning("DSS Private key invalid, trying ECDSAKey.")
                 failed = True
+            except IndexError:
+                logging.exception("Could not read DSS Private Key - have you provided it correctly?")
+                sys.exit(1)
         # ECDSAKey
         if failed:
             try:
@@ -63,6 +67,9 @@ class SshClient:
             except paramiko.SSHException:
                 logging.warning("ECDSAKey Private key invalid, trying Ed25519Key.")
                 failed = True
+            except IndexError:
+                logging.exception("Could not read ECDSAKey Private Key - have you provided it correctly?")
+                sys.exit(1)
         # Ed25519Key
         if failed:
             try:
@@ -70,6 +77,9 @@ class SshClient:
             except paramiko.SSHException as e:
                 logging.warning("Ed25519Key Private key invalid.")
                 raise e
+            except IndexError:
+                logging.exception("Could not read Ed25519Key Private Key - have you provided it correctly?")
+                sys.exit(1)
 
         return pkey
 

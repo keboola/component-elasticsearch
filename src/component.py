@@ -9,7 +9,7 @@ from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
 COMPONENT_VERSION = '1.0.2'
-sys.tracebacklimit = 0
+sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
 KEY_REQUEST_BODY = 'request_body'
