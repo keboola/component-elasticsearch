@@ -32,7 +32,6 @@
             "title": "SSH",
             "type": "object",
             "required": [
-                "use_ssh",
                 "hostname",
                 "port",
                 "username",
