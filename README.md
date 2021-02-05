@@ -114,7 +114,7 @@ An example of sepcifying a request body may be shown by using the `_source` para
 
 ### Date Placeholder Replacement (`date`)
 
-A date `{{date}}` placeholder date can be used in specifying an index name. This is especially useful if name of your index changes each day (e.g. data for each day are stored in a separate index).
+A date placeholder `{{date}}` can be used in specifying an index name. This is especially useful if name of your index changes each day (e.g. data for each day are stored in a separate index).
 
 The date placeholder will be automatically replaced based on the specification of the parameters below.
 
