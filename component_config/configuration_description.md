@@ -63,7 +63,7 @@ Index configuration is tied to a specific index you'd like to download. Users ar
 
 ### Index Name (`index_name`)
 
-The `index_name` parameter specifies the name of the index in an Elasticsearch index, which will be downloaded. [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html) is utilized to download all data from an index.
+The `index_name` parameter specifies the name of the index in an Elasticsearch index, which will be downloaded. [Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html) is utilized to download all data from an index. You can use `{{date}}` placeholder to be replaced by settings specified in the placeholder settings section.
 
 ### Request Body (`request_body`)
 
@@ -96,7 +96,7 @@ An example of sepcifying a request body may be shown by using the `_source` para
 }
 ```
 
-### Date Settings (`date`)
+### Date Placeholder Replacement (`date`)
 
 A date `{{date}}` placeholder date can be used in specifying an index name. This is especially useful if name of your index changes each day (e.g. data for each day are stored in a separate index).
 
@@ -104,7 +104,6 @@ The date placeholder will be automatically replaced based on the specification o
 
 Parameters:
 
-- **Replace Date** (`append_date`) - if set to `true`, the date placeholder will be replaced by a date value;
 - **Date Shift** (`shift`) - a date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced;
 - **Date Format** (`format`) - the format of date, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
 
