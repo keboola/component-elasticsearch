@@ -24,7 +24,8 @@
                 "port": {
                     "title": "Port",
                     "type": "integer",
-                    "propertyOrder": 200
+                    "propertyOrder": 200,
+                    "default": 9200
                 }
             }
         },
@@ -47,7 +48,8 @@
                 "port": {
                     "title": "SSH Port",
                     "type": "integer",
-                    "propertyOrder": 300
+                    "propertyOrder": 300,
+                    "default": 22
                 },
                 "username": {
                     "title": "SSH Username",

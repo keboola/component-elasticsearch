@@ -27,33 +27,23 @@
             "propertyOrder": 200
         },
         "date": {
-            "title": "Date Settings",
+            "title": "Date Placeholder Replacement",
+            "description": "If placeholder <strong>{{date}}</strong> is used in the index name, it will be automatically replaced by settings specified below.",
             "type": "object",
             "required": [
-                "append_date",
                 "shift",
                 "format"
             ],
             "propertyOrder": 300,
             "format": "grid-strict",
             "properties": {
-                "append_date": {
-                    "title": "Replace Date",
-                    "description": "If set to true, the <strong>{{date}}</strong> date placeholder will be replaced by a specified date.",
-                    "type": "boolean",
-                    "propertyOrder": 100,
-                    "default": false,
-                    "options": {
-                        "grid_columns": 4
-                    }
-                },
                 "shift": {
                     "title": "Date Shift",
                     "description": "Specify date in absolute format (YYYY-MM-DD) or relative format (yesterday, 3 days ago, etc.).",
                     "type": "string",
                     "propertyOrder": 200,
                     "options": {
-                        "grid_columns": 4
+                        "grid_columns": 6
                     },
                     "default": "yesterday"
                 },
@@ -64,7 +54,7 @@
                     "default": "%Y-%m-%d",
                     "propertyOrder": 300,
                     "options": {
-                        "grid_columns": 4
+                        "grid_columns": 6
                     }
                 }
 

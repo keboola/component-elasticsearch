@@ -11,7 +11,7 @@ from typing import List, Tuple
 Headers = List[Tuple[str, str]]
 
 # Workaround for re-key timeout: https://github.com/paramiko/paramiko/issues/822
-paramiko.packet.Packetizer.REKEY_BYTES = 10000000000
+paramiko.packet.Packetizer.REKEY_BYTES = 1e10
 
 
 class SshClient:

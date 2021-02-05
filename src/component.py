@@ -8,7 +8,7 @@ from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.0.2'
+COMPONENT_VERSION = '1.0.3'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -35,7 +35,7 @@ KEY_DB_PORT = 'port'
 
 KEY_DEBUG = 'debug'
 
-MANDATORY_PARAMS = [KEY_INDEX_NAME, KEY_DB, KEY_STORAGE_TABLE]
+MANDATORY_PARAMS = [KEY_INDEX_NAME, KEY_DB, KEY_STORAGE_TABLE, KEY_SSH]
 
 
 @dataclass
@@ -127,8 +127,7 @@ class Component(KBCEnvHandler):
         _req_body = self.cfg_params.get(KEY_REQUEST_BODY, '{}').strip()
         request_body_string = _req_body if _req_body != '' else '{}'
 
-        if date_config.get(KEY_DATE_APPEND, False) is True:
-
+        if '{{date}}' in index:
             _date = dateparser.parse(date_config.get(KEY_DATE_SHIFT, 'yesterday'))
 
             if _date is None:
@@ -137,13 +136,12 @@ class Component(KBCEnvHandler):
 
             _date_formatted = _date.strftime(date_config.get(KEY_DATE_FORMAT, '%Y-%m-%d'))
 
-            if '{{date}}' in index:
-                index = index.replace('{{date}}', _date_formatted)
-                logging.info(f"Replaced date placeholder with value {_date_formatted}. " +
-                             f"Downloading data from index {index}.")
+            index = index.replace('{{date}}', _date_formatted)
+            logging.info(f"Replaced date placeholder with value {_date_formatted}. " +
+                         f"Downloading data from index {index}.")
 
-            else:
-                logging.warn(f"No date placeholder found in index name {index}.")
+        else:
+            logging.info(f"No date placeholder found in index name {index}.")
 
         try:
             request_body = json.loads(request_body_string)
@@ -239,7 +237,7 @@ class Component(KBCEnvHandler):
                 all_results = []
                 already_written += _results_len
 
-                logging.debug(f"Parsed {already_written} results so far.")
+                logging.info(f"Parsed {already_written} results so far.")
 
         logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
         self.writer.create_manifest(self.writer.result_schema, self.writer.incremental, self.writer.primary_keys)
