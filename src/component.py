@@ -1,14 +1,15 @@
 import dateparser
 import json
 import logging
+import pytz
 import sys
 
 from dataclasses import dataclass
-from client import SshClient
+from client import SshClient, RegularClient, REQUEST_SIZE
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.0.3'
+COMPONENT_VERSION = '1.1.0'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -21,6 +22,7 @@ KEY_DATE = 'date'
 KEY_DATE_APPEND = 'append_date'
 KEY_DATE_FORMAT = 'format'
 KEY_DATE_SHIFT = 'shift'
+KEY_DATE_TZ = 'time_zone'
 
 KEY_SSH = 'ssh'
 KEY_SSH_USE = 'use_ssh'
@@ -78,7 +80,10 @@ class Component(KBCEnvHandler):
         _ssh_object = self._parse_ssh_parameters()
         self.index, self.index_params = self._parse_index_parameters()
 
-        self.client = SshClient(_ssh_object, _db_object)
+        if _ssh_object is not None:
+            self.client = SshClient(_ssh_object, _db_object)
+        else:
+            self.client = RegularClient(_db_object)
 
         self.writer = Writer(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
                              self.cfg_params.get(KEY_INCREMENTAL, True),
@@ -88,23 +93,29 @@ class Component(KBCEnvHandler):
 
         ssh_config = self.cfg_params.get(KEY_SSH, {})
 
-        if ssh_config == {}:  # or ssh_config.get(KEY_SSH_USE) is False:
+        if ssh_config == {}:
 
-            logging.info("SSH configuration not specified.")
-            # logging.error("Method not implemented.")
-            sys.exit(1)
+            logging.info("SSH configuration not specified. Using standard connection method.")
+            return None
 
         else:
 
-            try:
-                ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
-                                       ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
+            if ssh_config.get(KEY_SSH_USE, False) is True:
 
-            except KeyError as e:
-                logging.exception(f"Missing mandatory field {e} in SSH configuration.")
-                sys.exit(1)
+                try:
+                    ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
+                                           ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
+                    logging.info("Using SSH authentication.")
 
-            return ssh_object
+                except KeyError as e:
+                    logging.exception(f"Missing mandatory field {e} in SSH configuration.")
+                    sys.exit(1)
+
+                return ssh_object
+
+            else:
+                logging.debug("Not using SSH.")
+                return None
 
     def _parse_db_parameters(self):
 
@@ -134,7 +145,17 @@ class Component(KBCEnvHandler):
                 logging.error(f"Could not parse value {date_config[KEY_DATE_SHIFT]} to date.")
                 sys.exit(1)
 
-            _date_formatted = _date.strftime(date_config.get(KEY_DATE_FORMAT, '%Y-%m-%d'))
+            _date = _date.replace(tzinfo=pytz.UTC)
+
+            _tz = date_config.get(KEY_DATE_TZ, 'UTC')
+
+            if _tz not in pytz.all_timezones:
+                logging.error(f"Incorrect timezone {_tz} provided. Timezone must be a valid DB timezone name. "
+                              "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
+                sys.exit(1)
+
+            _date_tz = pytz.timezone(_tz).normalize(_date)
+            _date_formatted = _date_tz.strftime(date_config.get(KEY_DATE_FORMAT, '%Y-%m-%d'))
 
             index = index.replace('{{date}}', _date_formatted)
             logging.info(f"Replaced date placeholder with value {_date_formatted}. " +
@@ -202,10 +223,12 @@ class Component(KBCEnvHandler):
         logging.info(f"{_nr_results} rows will be downloaded from index {self.index}.")
         all_results += [self.writer.flatten_json(r) for r in _results]
 
-        if len(_results) < self.client.REQUEST_SIZE:
-            is_complete = True
-
         already_written = 0
+        if len(_results) < REQUEST_SIZE:
+            is_complete = True
+            self.writer.write_results(all_results, is_complete=is_complete)
+            already_written += len(_results)
+
         while is_complete is False:
 
             _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
