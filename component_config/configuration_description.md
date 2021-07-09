@@ -106,6 +106,7 @@ Parameters:
 
 - **Date Shift** (`shift`) - a date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced;
 - **Date Format** (`format`) - the format of date, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
+- **Time Zone** (`time_zone`) - a time zone, at which the date replacement will be evaluated. Accepted format is any standard [DB timezone specification](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).
 
 
 ### Output Table Name (`storage_table`)
