@@ -9,7 +9,7 @@ from client import SshClient, RegularClient, REQUEST_SIZE
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.1.0'
+COMPONENT_VERSION = '1.1.1'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -252,7 +252,7 @@ class Component(KBCEnvHandler):
 
             all_results += [self.writer.flatten_json(r) for r in _results]
 
-            if len(_results) < self.client.REQUEST_SIZE:
+            if len(_results) < REQUEST_SIZE:
                 is_complete = True
 
             if ((_results_len := len(all_results)) >= self.BATCH_PROCESSING_SIZE) or is_complete is True:
