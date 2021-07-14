@@ -20,7 +20,8 @@ class Writer:
         self.table_path = path
         self.result_schema = None
 
-        self.io = open(os.path.join(self.table_path, self.table_name), 'w')
+        self.io = None
+        # self.io = open(os.path.join(self.table_path, self.table_name), 'w')
 
         if isinstance(primary_keys, List) is False:
             logging.error("Primary keys must be provided as an array.")
@@ -56,6 +57,9 @@ class Writer:
             )
 
     def _write_results(self, results):
+
+        if self.io is None:
+            self.io = open(os.path.join(self.table_path, self.table_name), 'w')
 
         if self.result_schema is None:
 

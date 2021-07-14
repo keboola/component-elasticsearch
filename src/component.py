@@ -5,11 +5,11 @@ import pytz
 import sys
 
 from dataclasses import dataclass
-from client import SshClient, RegularClient, REQUEST_SIZE
+from client import SshClient, REQUEST_SIZE
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.1.1'
+COMPONENT_VERSION = '1.1.2'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -80,10 +80,12 @@ class Component(KBCEnvHandler):
         _ssh_object = self._parse_ssh_parameters()
         self.index, self.index_params = self._parse_index_parameters()
 
-        if _ssh_object is not None:
-            self.client = SshClient(_ssh_object, _db_object)
-        else:
-            self.client = RegularClient(_db_object)
+        # if _ssh_object is not None:
+        #     self.client = SshClient(_ssh_object, _db_object)
+        # else:
+        #     self.client = RegularClient(_db_object)
+
+        self.client = SshClient(_ssh_object, _db_object)
 
         self.writer = Writer(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
                              self.cfg_params.get(KEY_INCREMENTAL, True),
@@ -93,29 +95,23 @@ class Component(KBCEnvHandler):
 
         ssh_config = self.cfg_params.get(KEY_SSH, {})
 
-        if ssh_config == {}:
+        if ssh_config == {}:  # or ssh_config.get(KEY_SSH_USE) is False:
 
-            logging.info("SSH configuration not specified. Using standard connection method.")
-            return None
+            logging.info("SSH configuration not specified.")
+            # logging.error("Method not implemented.")
+            sys.exit(1)
 
         else:
 
-            if ssh_config.get(KEY_SSH_USE, False) is True:
+            try:
+                ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
+                                       ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
 
-                try:
-                    ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
-                                           ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
-                    logging.info("Using SSH authentication.")
+            except KeyError as e:
+                logging.exception(f"Missing mandatory field {e} in SSH configuration.")
+                sys.exit(1)
 
-                except KeyError as e:
-                    logging.exception(f"Missing mandatory field {e} in SSH configuration.")
-                    sys.exit(1)
-
-                return ssh_object
-
-            else:
-                logging.debug("Not using SSH.")
-                return None
+            return ssh_object
 
     def _parse_db_parameters(self):
 
