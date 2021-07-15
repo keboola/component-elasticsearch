@@ -80,11 +80,6 @@ class Component(KBCEnvHandler):
         _ssh_object = self._parse_ssh_parameters()
         self.index, self.index_params = self._parse_index_parameters()
 
-        # if _ssh_object is not None:
-        #     self.client = SshClient(_ssh_object, _db_object)
-        # else:
-        #     self.client = RegularClient(_db_object)
-
         self.client = SshClient(_ssh_object, _db_object)
 
         self.writer = Writer(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
