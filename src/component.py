@@ -9,7 +9,7 @@ from client import SshClient, REQUEST_SIZE
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.2.2'
+COMPONENT_VERSION = '1.2.3'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -254,6 +254,7 @@ class Component(KBCEnvHandler):
                 logging.info(f"Parsed {already_written} results so far.")
 
         logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
-        self.writer.create_manifest(self.writer.result_schema, self.writer.incremental, self.writer.primary_keys)
+        if already_written > 0:
+            self.writer.create_manifest(self.writer.result_schema, self.writer.incremental, self.writer.primary_keys)
 
         logging.info("Component finished.")
