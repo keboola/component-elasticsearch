@@ -83,5 +83,5 @@ class Writer:
         if len(results) > 0:
             self._write_results(results)
 
-        if is_complete is True:
+        if is_complete is True and self.io is not None:
             self.io.close()
