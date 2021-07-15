@@ -12,7 +12,7 @@ from typing import List, Tuple
 Headers = List[Tuple[str, str]]
 
 # Workaround for re-key timeout: https://github.com/paramiko/paramiko/issues/822
-paramiko.packet.Packetizer.REKEY_BYTES = 1e10
+paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 REQUEST_SIZE = 2000
 DEFAULT_SCROLL = '5m'
 
