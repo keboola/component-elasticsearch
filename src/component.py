@@ -9,7 +9,7 @@ from client import SshClient, REQUEST_SIZE
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.2.0'
+COMPONENT_VERSION = '1.2.1'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
