@@ -80,7 +80,8 @@ class Writer:
 
     def write_results(self, results, is_complete=False):
 
-        self._write_results(results)
+        if len(results) > 0:
+            self._write_results(results)
 
         if is_complete is True:
             self.io.close()
