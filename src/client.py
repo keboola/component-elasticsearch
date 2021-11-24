@@ -14,7 +14,7 @@ Headers = List[Tuple[str, str]]
 # Workaround for re-key timeout: https://github.com/paramiko/paramiko/issues/822
 paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 REQUEST_SIZE = 2000
-DEFAULT_SCROLL = '5m'
+DEFAULT_SCROLL = '15m'
 
 
 class RegularClient:
@@ -38,8 +38,6 @@ class RegularClient:
         # Add JSON body
         if json_body is not None:
             curl += f' --data \'{json.dumps(json_body)}\''
-
-        curl += ' -u \'admin:Paib*cuLp7Tyet**\''
 
         curl += f' {url}'
 
