@@ -1,6 +1,5 @@
 import json
 import logging
-import subprocess
 import paramiko
 import io
 import socket
@@ -13,65 +12,12 @@ Headers = List[Tuple[str, str]]
 
 # Workaround for re-key timeout: https://github.com/paramiko/paramiko/issues/822
 paramiko.packet.Packetizer.REKEY_BYTES = 1e12
-REQUEST_SIZE = 2000
+
+SIZE_PARAM = 'size'
+SCROLL_PARAM = 'scroll'
+
+DEFAULT_SIZE = 2000
 DEFAULT_SCROLL = '15m'
-
-
-class RegularClient:
-    def __init__(self, Database):
-
-        self.db = Database
-
-    def build_curl(self, url, request_type, headers=[], json_body=None):
-
-        # Start of curl string
-        curl = 'curl -i'
-        curl += f' --request {request_type}'
-
-        # Add headers
-        _header_string = ''
-        for header in headers:
-            _header_string += f' -H "{header[0]}: {header[1]}"'
-
-        curl += _header_string
-
-        # Add JSON body
-        if json_body is not None:
-            curl += f' --data \'{json.dumps(json_body)}\''
-
-        curl += f' {url}'
-
-        logging.debug(f"Constructed cURL: {curl}.")
-        return [curl]
-
-    def get_first_page(self, index, parameters):
-
-        db_url = furl(f'{self.db.host}:{self.db.port}')
-        db_url /= f'{index}/_search'
-        db_url.args['scroll'] = DEFAULT_SCROLL
-
-        parameters['size'] = REQUEST_SIZE
-
-        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], parameters)
-
-        run = subprocess.run(curl, capture_output=True, shell=True)
-        out, err = run.stdout, run.stderr
-
-        return out.decode().strip(), err.decode().strip()
-
-    def get_scroll(self, scroll_id):
-
-        db_url = furl(f'{self.db.host}:{self.db.port}')
-        db_url /= '_search/scroll'
-
-        data = {'scroll': DEFAULT_SCROLL, 'scroll_id': scroll_id}
-
-        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], data)
-
-        run = subprocess.run(curl, capture_output=True, shell=True)
-        out, err = run.stdout, run.stderr
-
-        return out.decode().strip(), err.decode().strip()
 
 
 class SshClient:
@@ -162,15 +108,21 @@ class SshClient:
         logging.debug(f"Constructed cURL: {curl}.")
         return curl
 
-    def get_first_page(self, index, parameters):
+    def get_first_page(self, index, body):
 
         db_url = furl(f'{self.db.host}:{self.db.port}')
         db_url /= f'{index}/_search'
-        db_url.args['scroll'] = DEFAULT_SCROLL
 
-        parameters['size'] = REQUEST_SIZE
+        self._default_scroll = body.pop(SCROLL_PARAM, DEFAULT_SCROLL)
+        db_url.args[SCROLL_PARAM] = self._default_scroll
 
-        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], parameters)
+        if SIZE_PARAM in body:
+            self._default_size = body[SIZE_PARAM]
+        else:
+            self._default_size = DEFAULT_SIZE
+            body[SIZE_PARAM] = self._default_size
+
+        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], body)
 
         _, stdout, stderr = self.ssh.exec_command(curl)
         out, err = stdout.read(), stderr.read()
@@ -182,7 +134,7 @@ class SshClient:
         db_url = furl(f'{self.db.host}:{self.db.port}')
         db_url /= '_search/scroll'
 
-        data = {'scroll': DEFAULT_SCROLL, 'scroll_id': scroll_id}
+        data = {'scroll': self._default_scroll, 'scroll_id': scroll_id}
 
         curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], data)
 

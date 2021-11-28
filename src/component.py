@@ -5,11 +5,11 @@ import pytz
 import sys
 
 from dataclasses import dataclass
-from client import SshClient, REQUEST_SIZE
+from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.2.4'
+COMPONENT_VERSION = '1.3.0'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -215,7 +215,7 @@ class Component(KBCEnvHandler):
         all_results += [self.writer.flatten_json(r) for r in _results]
 
         already_written = 0
-        if len(_results) < REQUEST_SIZE:
+        if len(_results) < self.client._default_size:
             is_complete = True
             self.writer.write_results(all_results, is_complete=is_complete)
             already_written += len(_results)
@@ -243,7 +243,7 @@ class Component(KBCEnvHandler):
 
             all_results += [self.writer.flatten_json(r) for r in _results]
 
-            if len(_results) < REQUEST_SIZE:
+            if len(_results) < self.client._default_size:
                 is_complete = True
 
             if ((_results_len := len(all_results)) >= self.BATCH_PROCESSING_SIZE) or is_complete is True:

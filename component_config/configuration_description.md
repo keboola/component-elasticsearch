@@ -69,7 +69,7 @@ The `index_name` parameter specifies the name of the index in an Elasticsearch i
 
 In `request_body`, users are able to specify their custom JSON request body, which will be sent along with a request. For a list of all available attributes, which can be specified in the request body, please see [Request body in Search API](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html) documentation.
 
-Neither `size`, nor `scroll` parameters need to be specified in the request body, since the extractor automatically appends these parameters to required requests.
+It's also possible to specify `size` and `scroll` parameters, to control size of the returned page and length of its availability. If `size` or `scroll` are not specified, default values are used for either of the parameters.
 
 An example of sepcifying a request body may be shown by using the `_source` parameter to only extract requested fields. The request body would then take the following form:
 

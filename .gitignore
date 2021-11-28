@@ -9,3 +9,6 @@ __pycache__/
 
 # kbc datafolder
 /data
+
+# PyENV
+.python-version
