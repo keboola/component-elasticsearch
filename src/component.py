@@ -9,7 +9,7 @@ from client import SshClient
 from result import Writer
 from kbc.env_handler import KBCEnvHandler
 
-COMPONENT_VERSION = '1.3.0'
+COMPONENT_VERSION = '1.3.1'
 sys.tracebacklimit = 3
 
 KEY_INDEX_NAME = 'index_name'
@@ -56,7 +56,7 @@ class Database:
 
 class Component(KBCEnvHandler):
 
-    BATCH_PROCESSING_SIZE = 300000
+    BATCH_PROCESSING_SIZE = 100000
 
     def __init__(self):
 
@@ -212,7 +212,7 @@ class Component(KBCEnvHandler):
             _scroll_id, _nr_results, _results = self.parse_scroll(stdout_body)
 
         logging.info(f"{_nr_results} rows will be downloaded from index {self.index}.")
-        all_results += [self.writer.flatten_json(r) for r in _results]
+        all_results = [self.writer.flatten_json(r) for r in _results]
 
         already_written = 0
         if len(_results) < self.client._default_size:
@@ -241,16 +241,15 @@ class Component(KBCEnvHandler):
             else:
                 _scroll_id, _, _results = self.parse_scroll(stdout_body)
 
-            all_results += [self.writer.flatten_json(r) for r in _results]
+            all_results = [self.writer.flatten_json(r) for r in _results]
 
             if len(_results) < self.client._default_size:
                 is_complete = True
 
-            if ((_results_len := len(all_results)) >= self.BATCH_PROCESSING_SIZE) or is_complete is True:
-                self.writer.write_results(all_results, is_complete=is_complete)
-                all_results = []
-                already_written += _results_len
+            self.writer.write_results(all_results, is_complete)
+            already_written += len(_results)
 
+            if already_written % self.BATCH_PROCESSING_SIZE == 0:
                 logging.info(f"Parsed {already_written} results so far.")
 
         logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
