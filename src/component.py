@@ -1,13 +1,14 @@
-import dateparser
 import json
 import logging
-import pytz
 import sys
-
 from dataclasses import dataclass
+
+import dateparser
+import pytz
+from kbc.env_handler import KBCEnvHandler
+
 from client import SshClient
 from result import Writer
-from kbc.env_handler import KBCEnvHandler
 
 COMPONENT_VERSION = '1.3.1'
 sys.tracebacklimit = 3
@@ -55,7 +56,6 @@ class Database:
 
 
 class Component(KBCEnvHandler):
-
     BATCH_PROCESSING_SIZE = 100000
 
     def __init__(self):
@@ -215,10 +215,11 @@ class Component(KBCEnvHandler):
         all_results = [self.writer.flatten_json(r) for r in _results]
 
         already_written = 0
+        self.writer.write_results(all_results, is_complete=is_complete)
+        already_written += len(_results)
+
         if len(_results) < self.client._default_size:
             is_complete = True
-            self.writer.write_results(all_results, is_complete=is_complete)
-            already_written += len(_results)
 
         while is_complete is False:
 
