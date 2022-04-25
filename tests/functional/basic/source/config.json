@@ -1,0 +1,29 @@
+{
+  "parameters": {
+    "ssh": {
+      "hostname": "143.198.163.210",
+      "port": 22,
+      "username": "root",
+      "#private_key": "-----BEGIN RSA PRIVATE KEY-----\nMXXXXXX\n-----END RSA PRIVATE KEY-----"
+    },
+    "index_name": "events-2021-01-1/events",
+    "request_body": "{\"_source\": {\n       \"includes\": [\n        \"id\",\n        \"created\",\n        \"objectId\",\n        \"project.id\",\n        \"project.name\",\n        \"event\",\n        \"context.httpUserAgent\",\n        \"context.httpUserAgentOriginal\",\n        \"context.httpReferer\"\n       ]\n      }}",
+    "date": {
+      "append_date": true,
+      "format": "%Y.%m.%d",
+      "shift": "yesterday"
+    },
+    "primary_keys": [
+      "id",
+      "index"
+    ],
+    "incremental": true,
+    "storage_table": "search_analytics",
+    "db": {
+      "hostname": "127.0.0.1",
+      "port": 8709
+    },
+    "debug": true
+  },
+  "image_parameters": {}
+}
