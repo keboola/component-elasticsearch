@@ -1,12 +1,12 @@
+import io
 import json
 import logging
-import paramiko
-import io
 import socket
 import sys
-
-from furl import furl
 from typing import List, Tuple
+
+import paramiko
+from furl import furl
 
 Headers = List[Tuple[str, str]]
 
@@ -46,6 +46,7 @@ class SshClient:
         try:
             pkey = paramiko.RSAKey.from_private_key(keyfile)
         except paramiko.SSHException as e:
+            logging.debug(e)
             logging.warning("RSS Private key invalid, trying DSS.")
             failed = True
         except IndexError:
