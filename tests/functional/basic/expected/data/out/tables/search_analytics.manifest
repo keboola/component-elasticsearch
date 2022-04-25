@@ -1,0 +1,1 @@
+{"columns": ["_index", "_type", "_id", "_score", "_routing", "_source.created", "_source.context.httpUserAgent", "_source.context.httpReferer", "_source.project.name", "_source.project.id", "_source.id", "_source.event", "_source.objectId"], "incremental": true, "primary_key": ["id", "index"]}
