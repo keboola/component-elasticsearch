@@ -45,7 +45,7 @@ class SshClient:
         failed = False
         try:
             pkey = paramiko.RSAKey.from_private_key(keyfile)
-        except paramiko.SSHException:
+        except paramiko.SSHException as e:
             logging.warning("RSS Private key invalid, trying DSS.")
             failed = True
         except IndexError:
