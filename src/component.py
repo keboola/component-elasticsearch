@@ -1,6 +1,8 @@
 import json
 import logging
 import sys
+import os
+from pathlib import Path
 from dataclasses import dataclass
 
 import dateparser
@@ -59,8 +61,10 @@ class Component(KBCEnvHandler):
     BATCH_PROCESSING_SIZE = 100000
 
     def __init__(self):
+        default_data_dir = Path(__file__).resolve().parent.parent.joinpath('data').as_posix() \
+            if not os.environ.get('KBC_DATADIR') else None
 
-        super().__init__(mandatory_params=MANDATORY_PARAMS, log_level='INFO')
+        super().__init__(mandatory_params=MANDATORY_PARAMS, log_level='INFO', data_path=default_data_dir)
 
         logging.info(f"Running component version {COMPONENT_VERSION}.")
 

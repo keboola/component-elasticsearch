@@ -16,7 +16,7 @@ paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 SIZE_PARAM = 'size'
 SCROLL_PARAM = 'scroll'
 
-DEFAULT_SIZE = 2000
+DEFAULT_SIZE = 1
 DEFAULT_SCROLL = '15m'
 
 
@@ -24,8 +24,7 @@ class SshClient:
 
     def __init__(self, SshTunnel, Database):
 
-        pkey_file = io.StringIO(SshTunnel.key)
-        pkey = self._parse_private_key(pkey_file)
+        pkey = self._parse_private_key(SshTunnel.key)
 
         # Set up SSH paramiko client
         self.ssh = paramiko.SSHClient()
@@ -39,11 +38,12 @@ class SshClient:
 
         self.db = Database
 
-    def _parse_private_key(self, keyfile):
+    def _parse_private_key(self, key):
         # try all versions of encryption keys
         pkey = None
         failed = False
         try:
+            keyfile = io.StringIO(key)
             pkey = paramiko.RSAKey.from_private_key(keyfile)
         except paramiko.SSHException as e:
             logging.debug(e)
@@ -55,6 +55,7 @@ class SshClient:
         # DSS
         if failed:
             try:
+                keyfile = io.StringIO(key)
                 pkey = paramiko.DSSKey.from_private_key(keyfile)
                 failed = False
             except paramiko.SSHException:
@@ -62,10 +63,11 @@ class SshClient:
                 failed = True
             except IndexError:
                 logging.exception("Could not read DSS Private Key - have you provided it correctly?")
-                sys.exit(1)
+                failed = True
         # ECDSAKey
         if failed:
             try:
+                keyfile = io.StringIO(key)
                 pkey = paramiko.ECDSAKey.from_private_key(keyfile)
                 failed = False
             except paramiko.SSHException:
@@ -73,10 +75,11 @@ class SshClient:
                 failed = True
             except IndexError:
                 logging.exception("Could not read ECDSAKey Private Key - have you provided it correctly?")
-                sys.exit(1)
+                failed = True
         # Ed25519Key
         if failed:
             try:
+                keyfile = io.StringIO(key)
                 pkey = paramiko.Ed25519Key.from_private_key(keyfile)
             except paramiko.SSHException as e:
                 logging.warning("Ed25519Key Private key invalid.")
