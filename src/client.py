@@ -16,7 +16,7 @@ paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 SIZE_PARAM = 'size'
 SCROLL_PARAM = 'scroll'
 
-DEFAULT_SIZE = 1
+DEFAULT_SIZE = 2000
 DEFAULT_SCROLL = '15m'
 
 
