@@ -1,4 +1,4 @@
-import csv
+from keboola.csvwriter import ElasticDictWriter
 import json
 import logging
 import os
@@ -47,7 +47,6 @@ class Writer:
     def create_manifest(self, columns, incremental, primary_keys):
 
         with open(os.path.join(self.table_path, self.table_name) + '.manifest', 'w') as man_file:
-
             json.dump(
                 {
                     'columns': columns,
@@ -73,8 +72,7 @@ class Writer:
 
             self.result_schema = available_columns
 
-        _writer = csv.DictWriter(self.io, fieldnames=self.result_schema, extrasaction='raise',
-                                 restval='', quoting=csv.QUOTE_ALL, quotechar='\"')
+        _writer = ElasticDictWriter(self.io, fieldnames=self.result_schema)
 
         _writer.writerows(results)
 

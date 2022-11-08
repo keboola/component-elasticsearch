@@ -2,3 +2,4 @@ https://bitbucket.org/kds_consulting_team/keboola-python-util-lib/get/0.5.0.zip#
 paramiko==2.7.2
 dateparser
 furl
+keboola.csvwriter
