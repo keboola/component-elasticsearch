@@ -102,6 +102,8 @@ class Component(KBCEnvHandler):
                 ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
                                        ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
 
+                logging.info(ssh_config[KEY_SSH_PKEY])
+
             except KeyError as e:
                 logging.exception(f"Missing mandatory field {e} in SSH configuration.")
                 sys.exit(1)
