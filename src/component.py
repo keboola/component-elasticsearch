@@ -2,13 +2,15 @@ import json
 import logging
 import sys
 from dataclasses import dataclass
+from keboola.csvwriter import ElasticDictWriter
+import csv
 
 import dateparser
 import pytz
 from kbc.env_handler import KBCEnvHandler
 
 from client import SshClient
-from result import Writer
+from result import Fetcher
 
 COMPONENT_VERSION = '1.3.1'
 sys.tracebacklimit = 3
@@ -82,9 +84,9 @@ class Component(KBCEnvHandler):
 
         self.client = SshClient(_ssh_object, _db_object)
 
-        self.writer = Writer(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
-                             self.cfg_params.get(KEY_INCREMENTAL, True),
-                             self.cfg_params.get(KEY_PRIMARY_KEYS, []))
+        self.fetcher = Fetcher(self.tables_out_path, self.cfg_params[KEY_STORAGE_TABLE],
+                               self.cfg_params.get(KEY_INCREMENTAL, True),
+                               self.cfg_params.get(KEY_PRIMARY_KEYS, []))
 
     def _parse_ssh_parameters(self):
 
@@ -212,49 +214,54 @@ class Component(KBCEnvHandler):
             _scroll_id, _nr_results, _results = self.parse_scroll(stdout_body)
 
         logging.info(f"{_nr_results} rows will be downloaded from index {self.index}.")
-        all_results = [self.writer.flatten_json(r) for r in _results]
+        all_results = [self.fetcher.flatten_json(r) for r in _results]
 
         already_written = 0
-        self.writer.write_results(all_results)
-        already_written += len(_results)
+        with ElasticDictWriter(self.fetcher.get_table_path(), fieldnames=[], restval='',
+                               quoting=csv.QUOTE_ALL, quotechar='\"') as wr:
+            for row in self.fetcher.fetch_results(all_results):
+                wr.writerow(row)
 
-        if len(_results) < self.client._default_size:
-            is_complete = True
-
-        while is_complete is False:
-
-            _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
-
-            if _scroll_out == '':
-                logging.error(f"Could not download data for scroll {_scroll_id}.\n" +
-                              f"STDERR: {_scroll_err}.")
-                sys.exit(1)
-
-            else:
-                pass
-
-            stdout_sc, stdout_body = self.parse_curl_stdout(_scroll_out)
-
-            if stdout_sc != '200':
-                logging.error(f"Could not download data. Error: {stdout_body}.")
-                sys.exit(1)
-
-            else:
-                _scroll_id, _, _results = self.parse_scroll(stdout_body)
-
-            all_results = [self.writer.flatten_json(r) for r in _results]
+            already_written += len(_results)
 
             if len(_results) < self.client._default_size:
                 is_complete = True
 
-            self.writer.write_results(all_results, is_complete)
-            already_written += len(_results)
+            while is_complete is False:
 
-            if already_written % self.BATCH_PROCESSING_SIZE == 0:
-                logging.info(f"Parsed {already_written} results so far.")
+                _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
+
+                if _scroll_out == '':
+                    logging.error(f"Could not download data for scroll {_scroll_id}.\n" +
+                                  f"STDERR: {_scroll_err}.")
+                    sys.exit(1)
+
+                else:
+                    pass
+
+                stdout_sc, stdout_body = self.parse_curl_stdout(_scroll_out)
+
+                if stdout_sc != '200':
+                    logging.error(f"Could not download data. Error: {stdout_body}.")
+                    sys.exit(1)
+
+                else:
+                    _scroll_id, _, _results = self.parse_scroll(stdout_body)
+
+                all_results = [self.fetcher.flatten_json(r) for r in _results]
+
+                if len(_results) < self.client._default_size:
+                    is_complete = True
+
+                    for row in self.fetcher.fetch_results(all_results):
+                        wr.writerow(row)
+                    already_written += len(_results)
+
+                if already_written % self.BATCH_PROCESSING_SIZE == 0:
+                    logging.info(f"Parsed {already_written} results so far.")
 
         logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
         if already_written > 0:
-            self.writer.create_manifest(self.writer.result_schema, self.writer.incremental, self.writer.primary_keys)
+            self.fetcher.create_manifest(wr.fieldnames, self.fetcher.incremental, self.fetcher.primary_keys)
 
         logging.info("Component finished.")

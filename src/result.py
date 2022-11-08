@@ -1,5 +1,3 @@
-from keboola.csvwriter import ElasticDictWriter
-import csv
 import json
 import logging
 import os
@@ -7,7 +5,7 @@ import sys
 from typing import List
 
 
-class Writer:
+class Fetcher:
 
     def __init__(self, path: str, table_name: str, incremental: bool = False, primary_keys: List = []):
 
@@ -53,28 +51,10 @@ class Writer:
                 }, man_file
             )
 
-    def _write_results(self, results):
+    @staticmethod
+    def fetch_results(results):
+        for row in results:
+            yield row
 
-        path = os.path.join(self.table_path, self.table_name)
-
-        if self.result_schema is None:
-
-            available_columns = []
-            for res in results:
-                for key in res.keys():
-                    if key not in available_columns:
-                        available_columns += [key]
-                    else:
-                        pass
-
-            self.result_schema = available_columns
-
-        with ElasticDictWriter(path, fieldnames=self.result_schema, restval='',
-                               quoting=csv.QUOTE_ALL, quotechar='\"') as wr:
-            for row in results:
-                wr.writerow(row)
-
-    def write_results(self, results):
-
-        if len(results) > 0:
-            self._write_results(results)
+    def get_table_path(self):
+        return os.path.join(self.table_path, self.table_name)
