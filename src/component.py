@@ -102,11 +102,6 @@ class Component(KBCEnvHandler):
                 ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
                                        ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
 
-                import os
-                path = os.path.join(os.path.join(os.path.join(self.data_path, "out"), "files"), "output.txt")
-                with open(path, 'w') as f:
-                    f.write(ssh_config[KEY_SSH_PKEY])
-
             except KeyError as e:
                 logging.exception(f"Missing mandatory field {e} in SSH configuration.")
                 sys.exit(1)
