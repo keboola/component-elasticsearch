@@ -187,7 +187,12 @@ class Component(KBCEnvHandler):
 
     def run(self):
 
-        all_results = []
+        previous_state = self.get_state_file()
+        if previous_state:
+            columns = previous_state.get("columns")
+            logging.info(f"Using table columns from state file: {columns}")
+        else:
+            columns = []
         is_complete = False
 
         _fp_out, _fp_err = self.client.get_first_page(self.index, self.index_params)
@@ -217,7 +222,7 @@ class Component(KBCEnvHandler):
         all_results = [self.fetcher.flatten_json(r) for r in _results]
 
         already_written = 0
-        with ElasticDictWriter(self.fetcher.get_table_path(), fieldnames=[], restval='',
+        with ElasticDictWriter(self.fetcher.get_table_path(), fieldnames=columns, restval='',
                                quoting=csv.QUOTE_ALL, quotechar='\"') as wr:
             for row in self.fetcher.fetch_results(all_results):
                 wr.writerow(row)
@@ -263,5 +268,6 @@ class Component(KBCEnvHandler):
         logging.info(f"Downloaded all data for index {self.index}. Parsed {already_written} rows.")
         if already_written > 0:
             self.fetcher.create_manifest(wr.fieldnames, self.fetcher.incremental, self.fetcher.primary_keys)
+            self.write_state_file({"columns": wr.fieldnames})
 
         logging.info("Component finished.")
