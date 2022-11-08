@@ -215,7 +215,7 @@ class Component(KBCEnvHandler):
         all_results = [self.writer.flatten_json(r) for r in _results]
 
         already_written = 0
-        self.writer.write_results(all_results, is_complete=is_complete)
+        self.writer.write_results(all_results)
         already_written += len(_results)
 
         if len(_results) < self.client._default_size:

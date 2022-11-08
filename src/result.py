@@ -1,4 +1,5 @@
 from keboola.csvwriter import ElasticDictWriter
+import csv
 import json
 import logging
 import os
@@ -19,9 +20,6 @@ class Writer:
         self.incremental = bool(incremental)
         self.table_path = path
         self.result_schema = None
-
-        self.io = None
-        # self.io = open(os.path.join(self.table_path, self.table_name), 'w')
 
         if isinstance(primary_keys, List) is False:
             logging.error("Primary keys must be provided as an array.")
@@ -57,8 +55,7 @@ class Writer:
 
     def _write_results(self, results):
 
-        if self.io is None:
-            self.io = open(os.path.join(self.table_path, self.table_name), 'w')
+        path = os.path.join(self.table_path, self.table_name)
 
         if self.result_schema is None:
 
@@ -72,14 +69,12 @@ class Writer:
 
             self.result_schema = available_columns
 
-        _writer = ElasticDictWriter(self.io, fieldnames=self.result_schema)
+        with ElasticDictWriter(path, fieldnames=self.result_schema, restval='',
+                               quoting=csv.QUOTE_ALL, quotechar='\"') as wr:
+            for row in results:
+                wr.writerow(row)
 
-        _writer.writerows(results)
-
-    def write_results(self, results, is_complete=False):
+    def write_results(self, results):
 
         if len(results) > 0:
             self._write_results(results)
-
-        if is_complete is True and self.io is not None:
-            self.io.close()
