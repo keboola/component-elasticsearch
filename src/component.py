@@ -189,7 +189,7 @@ class Component(KBCEnvHandler):
 
         previous_state = self.get_state_file()
         if previous_state:
-            columns = previous_state.get("columns")
+            columns = previous_state.get("columns", [])
             logging.info(f"Using table columns from state file: {columns}")
         else:
             columns = []
@@ -232,7 +232,7 @@ class Component(KBCEnvHandler):
             if len(_results) < self.client._default_size:
                 is_complete = True
 
-            while is_complete is False:
+            while not is_complete:
 
                 _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
 
@@ -258,9 +258,9 @@ class Component(KBCEnvHandler):
                 if len(_results) < self.client._default_size:
                     is_complete = True
 
-                    for row in self.fetcher.fetch_results(all_results):
-                        wr.writerow(row)
-                    already_written += len(_results)
+                for row in self.fetcher.fetch_results(all_results):
+                    wr.writerow(row)
+                already_written += len(_results)
 
                 if already_written % self.BATCH_PROCESSING_SIZE == 0:
                     logging.info(f"Parsed {already_written} results so far.")

@@ -16,7 +16,7 @@ paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 SIZE_PARAM = 'size'
 SCROLL_PARAM = 'scroll'
 
-DEFAULT_SIZE = 2000
+DEFAULT_SIZE = 1
 DEFAULT_SCROLL = '15m'
 
 
@@ -38,6 +38,7 @@ class SshClient:
             sys.exit(1)
 
         self.db = Database
+        self._default_size = DEFAULT_SIZE
 
     def _parse_private_key(self, keyfile):
         # try all versions of encryption keys
@@ -120,8 +121,9 @@ class SshClient:
         if SIZE_PARAM in body:
             self._default_size = body[SIZE_PARAM]
         else:
-            self._default_size = DEFAULT_SIZE
             body[SIZE_PARAM] = self._default_size
+
+        logging.info(f"Default size: {self._default_size}")
 
         curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], body)
 
