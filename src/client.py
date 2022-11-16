@@ -4,6 +4,7 @@ import logging
 import socket
 import sys
 from typing import List, Tuple
+import retry
 
 import paramiko
 from furl import furl
@@ -18,6 +19,7 @@ SCROLL_PARAM = 'scroll'
 
 DEFAULT_SIZE = 2000
 DEFAULT_SCROLL = '15m'
+SSH_COMMAND_TIMEOUT = 0.001
 
 
 class SshClient:
@@ -110,6 +112,17 @@ class SshClient:
         logging.debug(f"Constructed cURL: {curl}.")
         return curl
 
+    @retry(paramiko.ssh_exception.SSHException, delay=5, tries=5)
+    def execute_ssh_command(self, curl):
+        """
+        Executes ssh command with timeout defined in SSH_COMMAND_TIMEOUT
+        """
+        try:
+            _, stdout, stderr = self.ssh.exec_command(command=curl, timeout=SSH_COMMAND_TIMEOUT)
+        except paramiko.ssh_exception.SSHException as e:
+            raise Exception(f"Maximum number of retries reached when executing ssh_command {curl}") from e
+        return _, stdout, stderr
+
     def get_first_page(self, index, body):
 
         db_url = furl(f'{self.db.host}:{self.db.port}')
@@ -127,7 +140,8 @@ class SshClient:
 
         curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], body)
 
-        _, stdout, stderr = self.ssh.exec_command(curl)
+        _, stdout, stderr = self.execute_ssh_command(curl)
+
         out, err = stdout.read(), stderr.read()
 
         return out.decode().strip(), err.decode().strip()
@@ -141,7 +155,7 @@ class SshClient:
 
         curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], data)
 
-        _, stdout, stderr = self.ssh.exec_command(curl)
+        _, stdout, stderr = self.execute_ssh_command(curl)
         out, err = stdout.read(), stderr.read()
 
         return out.decode().strip(), err.decode().strip()
