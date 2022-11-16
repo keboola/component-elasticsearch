@@ -118,8 +118,9 @@ class SshClient:
         """
         try:
             _, stdout, stderr = self.ssh.exec_command(command=curl, timeout=SSH_COMMAND_TIMEOUT)
-        except paramiko.ssh_exception.SSHException as e:
-            raise Exception(f"Maximum number of retries (3) reached when executing ssh_command {curl}") from e
+        except paramiko.ssh_exception.SSHException:
+            logging.exception(f"Maximum number of retries (3) reached when executing ssh_command {curl}")
+            sys.exit(1)
         return _, stdout, stderr
 
     def get_first_page(self, index, body):
