@@ -4,3 +4,4 @@ dateparser
 cryptography==36.0.2
 furl
 keboola.csvwriter
+retry
