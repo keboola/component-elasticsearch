@@ -111,7 +111,7 @@ class SshClient:
         logging.debug(f"Constructed cURL: {curl}.")
         return curl
 
-    @retry(paramiko.ssh_exception.SSHException, delay=5, tries=3)
+    @retry(paramiko.ssh_exception.SSHException, delay=5, tries=5, backoff=5)
     def _execute_ssh_command(self, curl):
         """
         Wrapped func to execute ssh command with timeout defined in SSH_COMMAND_TIMEOUT
