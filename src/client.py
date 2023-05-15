@@ -25,21 +25,27 @@ class SshClient:
 
     def __init__(self, SshTunnel, Database):
 
+        self.SshTunnel = SshTunnel
+
         pkey_file = io.StringIO(SshTunnel.key)
-        pkey = self._parse_private_key(pkey_file)
+        self.pkey = self._parse_private_key(pkey_file)
 
         # Set up SSH paramiko client
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        try:
-            self.ssh.connect(hostname=SshTunnel.hostname, port=SshTunnel.port,
-                             username=SshTunnel.username, pkey=pkey)
-        except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
-            logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
-            sys.exit(1)
+
+        self.connect_ssh()
 
         self.db = Database
         self._default_size = DEFAULT_SIZE
+
+    def connect_ssh(self):
+        try:
+            self.ssh.connect(hostname=self.SshTunnel.hostname, port=self.SshTunnel.port,
+                             username=self.SshTunnel.username, pkey=self.pkey)
+        except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
+            logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
+            sys.exit(1)
 
     def _parse_private_key(self, keyfile):
         # try all versions of encryption keys
@@ -126,8 +132,13 @@ class SshClient:
         try:
             _, stdout, stderr = self._execute_ssh_command(curl)
         except paramiko.ssh_exception.SSHException:
-            logging.exception(f"Maximum number of retries (3) reached when executing ssh_command {curl}")
-            sys.exit(1)
+            try:
+                self.connect_ssh()
+                _, stdout, stderr = self._execute_ssh_command(curl)
+            except paramiko.ssh_exception.SSHException:
+                logging.exception(f"Maximum number of retries (3) reached when executing ssh_command {curl}")
+                sys.exit(1)
+            return _, stdout, stderr
         return _, stdout, stderr
 
     def get_first_page(self, index, body):
@@ -153,7 +164,6 @@ class SshClient:
         return out.decode().strip(), err.decode().strip()
 
     def get_scroll(self, scroll_id):
-
         db_url = furl(f'{self.db.host}:{self.db.port}')
         db_url /= '_search/scroll'
 
