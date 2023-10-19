@@ -3,8 +3,7 @@
     "description": "Set-up shared database and SSH settings.",
     "type": "object",
     "required": [
-        "db",
-        "ssh"
+        "db"
     ],
     "properties": {
         "db": {
@@ -26,44 +25,6 @@
                     "type": "integer",
                     "propertyOrder": 200,
                     "default": 9200
-                }
-            }
-        },
-        "ssh": {
-            "title": "SSH",
-            "type": "object",
-            "required": [
-                "hostname",
-                "port",
-                "username",
-                "#private_key"
-            ],
-            "propertyOrder": 200,
-            "properties": {
-                "hostname": {
-                    "title": "SSH Hostname",
-                    "type": "string",
-                    "propertyOrder": 200
-                },
-                "port": {
-                    "title": "SSH Port",
-                    "type": "integer",
-                    "propertyOrder": 300,
-                    "default": 22
-                },
-                "username": {
-                    "title": "SSH Username",
-                    "type": "string",
-                    "propertyOrder": 400
-                },
-                "#private_key": {
-                    "title": "SSH Private Key",
-                    "type": "string",
-                    "propertyOrder": 500,
-                    "format": "textarea",
-                    "options": {
-                        "input_height": "120px"
-                    }
                 }
             }
         }

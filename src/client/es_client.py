@@ -27,7 +27,7 @@ class ElasticsearchClient(Elasticsearch):
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
-            query (str): Elasticsearch DSL query.
+            query (dict): Elasticsearch DSL query.
             destination (str): Path to store the results to.
             table_name (str): Name of the output table - only used for parser.
             parser (Parser): Uses already existing Parser setup.
@@ -39,8 +39,6 @@ class ElasticsearchClient(Elasticsearch):
             self.parser = Parser(main_table_name=table_name, analyze_further=True)
         else:
             self.parser = parser
-
-        query = json.loads(query)
 
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
         self._save_results([hit["_source"] for hit in response['hits']['hits']], destination)
