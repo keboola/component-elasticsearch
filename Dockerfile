@@ -1,4 +1,4 @@
-FROM python:3.8.5-slim
+FROM python:3.11-slim
 ENV PYTHONIOENCODING utf-8
 
 RUN apt-get update && apt-get install -y build-essential curl

@@ -1,7 +1,6 @@
-https://bitbucket.org/kds_consulting_team/keboola-python-util-lib/get/0.5.0.zip#egg=kbc
-paramiko==2.7.2
-dateparser
-cryptography==36.0.2
-furl
+keboola.component
 keboola.csvwriter
-retry
+keboola.json-to-csv
+elasticsearch==8.10.0
+dateparser
+furl
