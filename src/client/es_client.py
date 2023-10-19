@@ -3,7 +3,7 @@ import uuid
 import json
 import os
 
-from keboola.json_to_csv import Parser, TableMapping
+from keboola.json_to_csv import Parser
 
 
 DEFAULT_SIZE = 10

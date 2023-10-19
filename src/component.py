@@ -1,6 +1,3 @@
-import csv
-from datetime import datetime
-from elasticsearch import Elasticsearch
 import json
 import logging
 import os
@@ -9,7 +6,6 @@ import shutil
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
-from keboola.json_to_csv import Parser, TableMapping
 
 from client.es_client import ElasticsearchClient
 
