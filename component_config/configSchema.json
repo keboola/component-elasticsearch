@@ -1,32 +1,101 @@
 {
-    "title": "DB & SSH",
-    "description": "Set-up shared database and SSH settings.",
-    "type": "object",
-    "required": [
-        "db"
-    ],
-    "properties": {
-        "db": {
-            "title": "Database",
-            "type": "object",
-            "required": [
-                "hostname",
-                "port"
-            ],
-            "propertyOrder": 100,
-            "properties": {
-                "hostname": {
-                    "title": "Hostname",
-                    "type": "string",
-                    "propertyOrder": 100
-                },
-                "port": {
-                    "title": "Port",
-                    "type": "integer",
-                    "propertyOrder": 200,
-                    "default": 9200
-                }
-            }
+  "title": "DB & SSH",
+  "description": "Set-up shared database and SSH settings.",
+  "type": "object",
+  "required": [
+    "db"
+  ],
+  "properties": {
+    "db": {
+      "title": "Database",
+      "type": "object",
+      "required": [
+        "hostname",
+        "port"
+      ],
+      "propertyOrder": 1,
+      "properties": {
+        "hostname": {
+          "title": "Hostname",
+          "type": "string",
+          "propertyOrder": 10
+        },
+        "port": {
+          "title": "Port",
+          "type": "integer",
+          "propertyOrder": 20,
+          "default": 9200
         }
+      }
+    },
+    "authentication": {
+      "title": "Authentication",
+      "propertyOrder": 2,
+      "properties": {
+        "auth_type": {
+          "title": "Authentication Type",
+          "type": "string",
+          "enum": [
+            "basic",
+            "api_key",
+            "bearer",
+            "no_auth"
+          ],
+          "default": "basic",
+          "options": {
+            "enum_titles": [
+              "Basic",
+              "API key",
+              "Bearer",
+              "No Authentication"
+            ]
+          },
+          "propertyOrder": 1
+        },
+        "username": {
+          "title": "Username",
+          "type": "string",
+          "options": {
+            "dependencies": {
+              "auth_type": "basic"
+            }
+          },
+          "propertyOrder": 2
+        },
+        "#password": {
+          "title": "Password",
+          "type": "string",
+          "format": "password",
+          "options": {
+            "dependencies": {
+              "auth_type": "basic"
+            }
+          },
+          "propertyOrder": 3
+        },
+        "#api_key": {
+          "title": "API Key",
+          "type": "string",
+          "format": "password",
+          "options": {
+            "dependencies": {
+              "auth_type": "api_key"
+            }
+          },
+          "propertyOrder": 4
+        },
+        "#bearer": {
+          "title": "Bearer Token",
+          "type": "string",
+          "format": "password",
+          "options": {
+            "dependencies": {
+              "auth_type": "bearer"
+            }
+          },
+          "propertyOrder": 5
+        }
+      }
     }
+  }
 }

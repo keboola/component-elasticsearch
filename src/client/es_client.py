@@ -16,8 +16,7 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, host, port):
-        params = [{'host': host, 'port': port, 'scheme': 'http'}]
+    def __init__(self, params: list[dict]):
         super().__init__(params)
         self.parser = None
 

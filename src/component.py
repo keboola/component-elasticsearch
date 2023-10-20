@@ -12,8 +12,6 @@ from keboola.csvwriter import ElasticDictWriter
 from client.es_client import ElasticsearchClient
 
 # configuration variables
-KEY_API_TOKEN = '#api_token'
-KEY_PRINT_HELLO = 'print_hello'
 KEY_GROUP_DB = 'db'
 KEY_DB_HOSTNAME = 'hostname'
 KEY_DB_PORT = 'port'
@@ -22,6 +20,12 @@ KEY_INDEX_NAME = 'index_name'
 KEY_STORAGE_TABLE = 'storage_table'
 KEY_PRIMARY_KEYS = 'primary_keys'
 KEY_INCREMENTAL = 'incremental'
+KEY_GROUP_AUTH = 'authentication'
+KEY_AUTH_TYPE = 'auth_type'
+KEY_USERNAME = 'username'
+KEY_PASSWORD = '#password'
+KEY_API_KEY = '#api_key'
+KEY_BEARER = '#bearer'
 
 KEY_DATE = 'date'
 KEY_DATE_APPEND = 'append_date'
@@ -62,6 +66,7 @@ class Component(ComponentBase):
     def run(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
+        auth = params.get(KEY_GROUP_AUTH)
         out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
         pks = params.get(KEY_PRIMARY_KEYS, [])
         incremental = params.get(KEY_INCREMENTAL, False)
@@ -99,12 +104,35 @@ class Component(ComponentBase):
 
     @staticmethod
     def get_client(params: dict) -> ElasticsearchClient:
+        auth_params = params.get(KEY_GROUP_AUTH)
         db_params = params.get(KEY_GROUP_DB)
+        auth_type = auth_params.get(KEY_AUTH_TYPE)
 
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
 
-        client = ElasticsearchClient(db_hostname, db_port)
+        setup = {"host": db_hostname, "port": db_port, "scheme": "http"}
+
+        if auth_type == "basic":
+            username = auth_params.get(KEY_USERNAME)
+            password = auth_params.get(KEY_PASSWORD)
+            setup["http_auth"] = (username, password)
+        elif auth_type == "api_key":
+            api_key = auth_params.get(KEY_API_KEY)
+            headers = {"Authorization": f"ApiKey {api_key}"}
+            setup["headers"] = headers
+        elif auth_type == "bearer":
+            bearer = auth_params.get(KEY_BEARER)
+            headers = {"Authorization": f"Bearer {bearer}"}
+            setup["headers"] = headers
+        elif auth_type == "no_auth":
+            pass
+        else:
+            raise UserException(f"Invalid auth_type: {auth_type}")
+
+        es_params = [setup]
+
+        client = ElasticsearchClient(es_params)
 
         # Check if the connection is established
         if not client.ping():
