@@ -6,7 +6,7 @@ import os
 from keboola.json_to_csv import Parser
 
 
-DEFAULT_SIZE = 10
+DEFAULT_SIZE = 2000
 SCROLL_TIMEOUT = '15m'
 
 

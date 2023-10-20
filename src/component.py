@@ -27,7 +27,7 @@ KEY_PASSWORD = '#password'
 KEY_API_KEY = '#api_key'
 KEY_BEARER = '#bearer'
 
-KEY_DATE = 'date'
+KEY_GROUP_DATE = 'date'
 KEY_DATE_APPEND = 'append_date'
 KEY_DATE_FORMAT = 'format'
 KEY_DATE_SHIFT = 'shift'
@@ -141,7 +141,7 @@ class Component(ComponentBase):
 
     def parse_index_parameters(self, params):
         index = params.get(KEY_INDEX_NAME, "")
-        date_config = params.get(KEY_DATE, {})
+        date_config = params.get(KEY_GROUP_DATE, {})
         query = self._parse_query(params)
 
         if DATE_PLACEHOLDER in index:
