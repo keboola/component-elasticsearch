@@ -6,12 +6,16 @@ env
 # compatibility with travis and bitbucket
 if [ ! -z ${BITBUCKET_TAG} ]
 then
-	echo "asigning bitbucket tag"
+	echo "assigning bitbucket tag"
 	export TAG="$BITBUCKET_TAG"
 elif [ ! -z ${TRAVIS_TAG} ]
 then
-	echo "asigning travis tag"
+	echo "assigning travis tag"
 	export TAG="$TRAVIS_TAG"
+elif [ ! -z ${GITHUB_TAG} ]
+then
+	echo "assigning github tag"
+	export TAG="$GITHUB_TAG"
 else
 	echo No Tag is set!
 	exit 1
