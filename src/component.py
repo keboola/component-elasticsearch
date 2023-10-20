@@ -66,7 +66,6 @@ class Component(ComponentBase):
     def run(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
-        auth = params.get(KEY_GROUP_AUTH)
         out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
         pks = params.get(KEY_PRIMARY_KEYS, [])
         incremental = params.get(KEY_INCREMENTAL, False)
