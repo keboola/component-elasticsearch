@@ -77,25 +77,28 @@ class Component(ComponentBase):
         statefile = self.get_state_file()
         previous_mapping = statefile.get(out_table_name, None)
 
-        out_table = self.create_out_table_definition(name=out_table_name, primary_key=pks, incremental=incremental)
-
         temp_folder = os.path.join(self.data_folder_path, "temp")
         os.makedirs(temp_folder, exist_ok=True)
 
         parser = client.extract_data(index_name, query, temp_folder, out_table_name, previous_mapping)
+
+        logging.info("Processing fetched data.")
+
         table_mappings = parser.get_table_mapping()
         columns = list(table_mappings['column_mappings'].values())
 
-        with ElasticDictWriter(out_table.full_path, columns) as wr:
-            wr.writeheader()
-            for file in os.listdir(temp_folder):
-                path = os.path.join(temp_folder, file)
-                with open(path, 'r') as f:
-                    data = json.load(f)
-                rows = data.get(out_table_name)
-                wr.writerows(rows)
+        for subfolder in os.listdir(temp_folder):
+            subfolder_path = os.path.join(temp_folder, subfolder)
+            out_table = self.create_out_table_definition(name=subfolder, primary_key=pks, incremental=incremental)
+            with ElasticDictWriter(out_table.full_path, columns) as wr:
+                wr.writeheader()
+                for file in os.listdir(subfolder_path):
+                    path = os.path.join(subfolder_path, file)
+                    with open(path, 'r') as f:
+                        rows = json.load(f)
+                    wr.writerows(rows)
 
-        self.write_manifest(out_table)
+            self.write_manifest(out_table)
 
         self.write_state_file({out_table_name: table_mappings})
 

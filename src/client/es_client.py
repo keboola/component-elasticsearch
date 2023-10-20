@@ -6,7 +6,7 @@ import os
 from keboola.json_to_csv import Parser
 
 
-DEFAULT_SIZE = 2000
+DEFAULT_SIZE = 1000
 SCROLL_TIMEOUT = '15m'
 
 
@@ -49,10 +49,14 @@ class ElasticsearchClient(Elasticsearch):
         return self.parser
 
     def _save_results(self, results: list, destination: str) -> None:
-        filename = f"{uuid.uuid4()}.json"
-        filepath = os.path.join(destination, filename)
-
         parsed = self.parser.parse_data(results)
 
-        with open(filepath, 'w') as file:
-            json.dump(parsed, file, indent=4)
+        for table in parsed:
+            table_folder_path = os.path.join(destination, table)
+            os.makedirs(table_folder_path, exist_ok=True)
+
+            filename = f"{uuid.uuid4()}.json"
+            filepath = os.path.join(table_folder_path, filename)
+
+            with open(filepath, 'w') as file:
+                json.dump(parsed[table], file, indent=4)
