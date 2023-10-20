@@ -85,6 +85,7 @@ class Component(ComponentBase):
         logging.info("Processing fetched data.")
 
         table_mappings = parser.get_table_mapping()
+        # TODO: table mapping using flattened method (including pks)
         columns = list(table_mappings['column_mappings'].values())
 
         for subfolder in os.listdir(temp_folder):
