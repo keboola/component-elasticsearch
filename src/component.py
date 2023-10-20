@@ -140,7 +140,7 @@ class Component(ComponentBase):
         return client
 
     def parse_index_parameters(self, params):
-        index = params[KEY_INDEX_NAME]
+        index = params.get(KEY_INDEX_NAME, "")
         date_config = params.get(KEY_DATE, {})
         query = self._parse_query(params)
 
