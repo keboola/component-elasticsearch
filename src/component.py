@@ -67,30 +67,35 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
         out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
-        pks = params.get(KEY_PRIMARY_KEYS, [])
+        user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
         incremental = params.get(KEY_INCREMENTAL, False)
 
         index_name, query = self.parse_index_parameters(params)
 
-        client = self.get_client(params)
+        statefile_mapping = self.get_state_file()
 
-        statefile = self.get_state_file()
-        previous_mapping = statefile.get(out_table_name, None)
+        client = self.get_client(params)
 
         temp_folder = os.path.join(self.data_folder_path, "temp")
         os.makedirs(temp_folder, exist_ok=True)
 
-        parser = client.extract_data(index_name, query, temp_folder, out_table_name, previous_mapping)
+        result_mapping = client.extract_data(index_name, query, temp_folder, out_table_name, statefile_mapping)
 
         logging.info("Processing fetched data.")
 
-        table_mappings = parser.get_table_mapping()
-        # TODO: table mapping using flattened method (including pks)
-        columns = list(table_mappings['column_mappings'].values())
+        mapping = self.extract_table_details(result_mapping)
 
         for subfolder in os.listdir(temp_folder):
+            columns = mapping.get(subfolder, {}).get("columns", [])
             subfolder_path = os.path.join(temp_folder, subfolder)
-            out_table = self.create_out_table_definition(name=subfolder, primary_key=pks, incremental=incremental)
+
+            if subfolder != out_table_name:
+                pk = mapping.get(subfolder, {}).get("primary_keys", [])
+            else:
+                pk = user_defined_pk
+
+            out_table = self.create_out_table_definition(name=subfolder, primary_key=pk, incremental=incremental)
+            logging.info(f"Processing table: {subfolder}, with primary keys: {pk}")
             with ElasticDictWriter(out_table.full_path, columns) as wr:
                 wr.writeheader()
                 for file in os.listdir(subfolder_path):
@@ -101,7 +106,7 @@ class Component(ComponentBase):
 
             self.write_manifest(out_table)
 
-        self.write_state_file({out_table_name: table_mappings})
+        self.write_state_file(result_mapping)
 
         shutil.rmtree(temp_folder)
 
@@ -183,6 +188,24 @@ class Component(ComponentBase):
             raise UserException(f"Incorrect timezone {tz} provided. Timezone must be a valid DB timezone name. "
                                 "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
         return tz
+
+    def extract_table_details(self, data, parent_prefix=''):
+        output = {}
+
+        # Get the current table name with any necessary prefixes
+        current_table_name = parent_prefix + data["table_name"]
+
+        # Store columns and primary keys for the current table
+        output[current_table_name] = {
+            "columns": list(data["column_mappings"].values()),
+            "primary_keys": data["primary_keys"]
+        }
+
+        # If there are child tables, extract details recursively for each child table
+        for child_name, child_data in data["child_tables"].items():
+            output.update(self.extract_table_details(child_data, current_table_name + "_"))
+
+        return output
 
 
 """

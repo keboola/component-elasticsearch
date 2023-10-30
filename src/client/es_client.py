@@ -3,7 +3,7 @@ import uuid
 import json
 import os
 
-from keboola.json_to_csv import Parser
+from keboola.json_to_csv import Parser, TableMapping
 
 
 DEFAULT_SIZE = 1000
@@ -20,7 +20,8 @@ class ElasticsearchClient(Elasticsearch):
         super().__init__(params)
         self.parser = None
 
-    def extract_data(self, index_name: str, query: str, destination: str, table_name: str, parser: Parser):
+    def extract_data(self, index_name: str, query: str, destination: str, table_name: str,
+                     mapping: dict = None) -> dict:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
 
@@ -29,15 +30,16 @@ class ElasticsearchClient(Elasticsearch):
             query (dict): Elasticsearch DSL query.
             destination (str): Path to store the results to.
             table_name (str): Name of the output table - only used for parser.
-            parser (Parser): Uses already existing Parser setup.
+            mapping (dict): Uses already existing Parser setup.
 
         Returns:
-            TableMapping
+            dict
         """
-        if not self.parser:
+        if not mapping:
             self.parser = Parser(main_table_name=table_name, analyze_further=True)
         else:
-            self.parser = parser
+            mapping = TableMapping.build_from_mapping_dict(mapping)
+            self.parser = Parser(table_name, table_mapping=mapping)
 
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
         self._save_results([hit["_source"] for hit in response['hits']['hits']], destination)
@@ -46,7 +48,7 @@ class ElasticsearchClient(Elasticsearch):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
             self._save_results([hit["_source"] for hit in response['hits']['hits']], destination)
 
-        return self.parser
+        return self.parser.get_table_mapping().as_dict()
 
     def _save_results(self, results: list, destination: str) -> None:
         parsed = self.parser.parse_data(results)
