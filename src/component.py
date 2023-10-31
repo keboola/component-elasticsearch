@@ -10,6 +10,7 @@ from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
 
 from client.es_client import ElasticsearchClient
+from client.ssh_client import SSHClient
 
 # configuration variables
 KEY_GROUP_DB = 'db'
@@ -37,6 +38,12 @@ DEFAULT_DATE = 'yesterday'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
+KEY_GROUP_SSH = 'ssh'
+KEY_USE_SSH = 'use_ssh'
+KEY_SSH_HOSTNAME = 'ssh_hostname'
+KEY_SSH_PORT = 'ssh_port'
+KEY_SSH_USERNAME = 'ssh_username'
+KEY_SSH_PRIVATE_KEY = '#ssh_private_key'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
@@ -50,15 +57,6 @@ DEFAULT_QUERY = """
 
 
 class Component(ComponentBase):
-    """
-        Extends base class for general Python components. Initializes the CommonInterface
-        and performs configuration validation.
-
-        For easier debugging the data folder is picked up by default from `../data` path,
-        relative to working directory.
-
-        If `debug` parameter is present in the `config.json`, the default logger is set to verbose DEBUG mode.
-    """
 
     def __init__(self):
         super().__init__()
@@ -66,13 +64,15 @@ class Component(ComponentBase):
     def run(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
+
         out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
         user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
         incremental = params.get(KEY_INCREMENTAL, False)
 
         index_name, query = self.parse_index_parameters(params)
-
         statefile_mapping = self.get_state_file()
+
+        ssh_client = self.initialize_ssh_client(params)
 
         client = self.get_client(params)
 
@@ -81,10 +81,28 @@ class Component(ComponentBase):
 
         result_mapping = client.extract_data(index_name, query, temp_folder, out_table_name, statefile_mapping)
 
-        logging.info("Processing fetched data.")
-
         mapping = self.extract_table_details(result_mapping)
 
+        self.process_extracted_data(temp_folder, mapping, out_table_name, user_defined_pk, incremental)
+
+        self.cleanup(temp_folder, ssh_client)
+        self.write_state_file(result_mapping)
+
+    @staticmethod
+    def initialize_ssh_client(params):
+        if params.get(KEY_USE_SSH, False):
+            ssh_host = params.get(KEY_SSH_HOSTNAME)
+            ssh_port = params.get(KEY_SSH_PORT)
+            ssh_username = params.get(KEY_SSH_USERNAME)
+            ssh_private_key = params.get(KEY_SSH_PRIVATE_KEY)
+            ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
+            ssh_client.connect()
+        else:
+            ssh_client = None
+        return ssh_client
+
+    def process_extracted_data(self, temp_folder, mapping, out_table_name, user_defined_pk, incremental):
+        logging.info("Processing fetched data.")
         for subfolder in os.listdir(temp_folder):
             columns = mapping.get(subfolder, {}).get("columns", [])
             subfolder_path = os.path.join(temp_folder, subfolder)
@@ -106,9 +124,12 @@ class Component(ComponentBase):
 
             self.write_manifest(out_table)
 
-        self.write_state_file(result_mapping)
-
+    @staticmethod
+    def cleanup(temp_folder, ssh_client):
         shutil.rmtree(temp_folder)
+
+        if ssh_client:
+            ssh_client.close()
 
     @staticmethod
     def get_client(params: dict) -> ElasticsearchClient:
