@@ -1,5 +1,7 @@
 keboola.component
 keboola.csvwriter
-keboola.json-to-csv
+keboola.json-to-csv==0.0.12
 elasticsearch==8.10.0
 dateparser
+paramiko
+memory-profiler

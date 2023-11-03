@@ -5,7 +5,6 @@ import os
 
 from keboola.json_to_csv import Parser, TableMapping
 
-
 DEFAULT_SIZE = 1000
 SCROLL_TIMEOUT = '15m'
 
@@ -18,7 +17,6 @@ class ElasticsearchClient(Elasticsearch):
 
     def __init__(self, params: list[dict]):
         super().__init__(params)
-        self.parser = None
 
     def extract_data(self, index_name: str, query: str, destination: str, table_name: str,
                      mapping: dict = None) -> dict:
@@ -36,29 +34,30 @@ class ElasticsearchClient(Elasticsearch):
             dict
         """
         if not mapping:
-            self.parser = Parser(main_table_name=table_name, analyze_further=True)
+            parser = Parser(main_table_name=table_name, analyze_further=True)
         else:
             mapping = TableMapping.build_from_mapping_dict(mapping)
-            self.parser = Parser(table_name, table_mapping=mapping)
+            parser = Parser(table_name, table_mapping=mapping)
 
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
-        self._save_results([hit["_source"] for hit in response['hits']['hits']], destination)
+        results = [hit["_source"] for hit in response['hits']['hits']]
+        parsed = parser.parse_data(results)
+        self._save_results(parsed, destination)
 
         while len(response['hits']['hits']):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
-            self._save_results([hit["_source"] for hit in response['hits']['hits']], destination)
+            results = [hit["_source"] for hit in response['hits']['hits']]
+            parsed = parser.parse_data(results)
+            self._save_results(parsed, destination)
 
-        return self.parser.get_table_mapping().as_dict()
+        return parser.table_mapping.as_dict()
 
-    def _save_results(self, results: list, destination: str) -> None:
-        parsed = self.parser.parse_data(results)
+    @staticmethod
+    def _save_results(results: dict, destination: str) -> None:
+        for result in results:
+            path = os.path.join(destination, result)
+            os.makedirs(path, exist_ok=True)
 
-        for table in parsed:
-            table_folder_path = os.path.join(destination, table)
-            os.makedirs(table_folder_path, exist_ok=True)
-
-            filename = f"{uuid.uuid4()}.json"
-            filepath = os.path.join(table_folder_path, filename)
-
-            with open(filepath, 'w') as file:
-                json.dump(parsed[table], file, indent=4)
+            full_path = os.path.join(path, f"{uuid.uuid4()}.json")
+            with open(full_path, "w") as json_file:
+                json.dump(results.get(result), json_file, indent=4)

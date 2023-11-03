@@ -4,6 +4,7 @@ import os
 import shutil
 import dateparser
 import pytz
+from typing import Union
 
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
@@ -89,7 +90,7 @@ class Component(ComponentBase):
         self.write_state_file(result_mapping)
 
     @staticmethod
-    def initialize_ssh_client(params):
+    def initialize_ssh_client(params) -> Union[SSHClient, None]:
         if params.get(KEY_USE_SSH, False):
             ssh_host = params.get(KEY_SSH_HOSTNAME)
             ssh_port = params.get(KEY_SSH_PORT)
@@ -159,9 +160,7 @@ class Component(ComponentBase):
         else:
             raise UserException(f"Invalid auth_type: {auth_type}")
 
-        es_params = [setup]
-
-        client = ElasticsearchClient(es_params)
+        client = ElasticsearchClient([setup])
 
         # Check if the connection is established
         if not client.ping():
