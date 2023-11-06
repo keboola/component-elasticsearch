@@ -61,6 +61,7 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
+        self.ssh_client = None
 
     def run(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
@@ -73,7 +74,7 @@ class Component(ComponentBase):
         index_name, query = self.parse_index_parameters(params)
         statefile_mapping = self.get_state_file()
 
-        ssh_client = self.initialize_ssh_client(params)
+        self.ssh_client = self.initialize_ssh_client(params)
 
         client = self.get_client(params)
 
@@ -86,7 +87,7 @@ class Component(ComponentBase):
 
         self.process_extracted_data(temp_folder, mapping, out_table_name, user_defined_pk, incremental)
 
-        self.cleanup(temp_folder, ssh_client)
+        self.cleanup(temp_folder)
         self.write_state_file(result_mapping)
 
     @staticmethod
@@ -106,7 +107,7 @@ class Component(ComponentBase):
 
             ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
             ssh_client.connect()
-            ssh_client.setup_tunnel(db_hostname, db_port, 9200)
+            ssh_client.setup_tunnel(db_hostname, db_port, db_port)
         else:
             ssh_client = None
         return ssh_client
@@ -134,12 +135,11 @@ class Component(ComponentBase):
 
             self.write_manifest(out_table)
 
-    @staticmethod
-    def cleanup(temp_folder, ssh_client):
+    def cleanup(self, temp_folder):
         shutil.rmtree(temp_folder)
 
-        if ssh_client:
-            ssh_client.close()
+        if self.ssh_client:
+            self.ssh_client.close()
 
     def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
