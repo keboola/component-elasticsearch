@@ -107,7 +107,7 @@
           "type": "string"
         },
         "ssh_port": {
-          "title": "SSH Username",
+          "title": "SSH Port",
           "type": "integer"
         },
         "ssh_username": {
