@@ -100,9 +100,6 @@ class Component(ComponentBase):
             ssh_private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
             ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
 
-            logging.info(
-                f"SSH Host: {ssh_host}, Port: {ssh_port}, Username: {ssh_username}, Private Key: {ssh_private_key}")
-
             ssh_client.connect()
         else:
             ssh_client = None
