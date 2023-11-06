@@ -40,7 +40,6 @@ DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
 KEY_GROUP_SSH = 'ssh'
-KEY_USE_SSH = 'use_ssh'
 KEY_SSH_HOSTNAME = 'ssh_hostname'
 KEY_SSH_PORT = 'ssh_port'
 KEY_SSH_USERNAME = 'ssh_username'
@@ -91,11 +90,12 @@ class Component(ComponentBase):
 
     @staticmethod
     def initialize_ssh_client(params) -> Union[SSHClient, None]:
-        if params.get(KEY_USE_SSH, False):
-            ssh_host = params.get(KEY_SSH_HOSTNAME)
-            ssh_port = params.get(KEY_SSH_PORT)
-            ssh_username = params.get(KEY_SSH_USERNAME)
-            ssh_private_key = params.get(KEY_SSH_PRIVATE_KEY)
+        ssh_params = params.get(KEY_GROUP_SSH)
+        if ssh_params.get(KEY_SSH_HOSTNAME, False):
+            ssh_host = ssh_params.get(KEY_SSH_HOSTNAME)
+            ssh_port = ssh_params.get(KEY_SSH_PORT)
+            ssh_username = ssh_params.get(KEY_SSH_USERNAME)
+            ssh_private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
             ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
             ssh_client.connect()
         else:

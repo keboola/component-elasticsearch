@@ -97,43 +97,27 @@
         }
       }
     },
-    "use_ssh": {
+    "ssh": {
       "title": "Use SSH",
       "type": "object",
       "propertyOrder": 3,
       "properties": {
-        "use_ssh_connection": {
-          "title": "Use SSH Connection",
-          "type": "boolean",
-          "default": false
-        },
         "ssh_hostname": {
           "title": "SSH Hostname",
-          "type": "string",
-          "options": {
-            "dependencies": {
-              "use_ssh_connection": true
-            }
-          }
+          "type": "string"
+        },
+        "ssh_port": {
+          "title": "SSH Username",
+          "type": "integer"
         },
         "ssh_username": {
           "title": "SSH Username",
-          "type": "string",
-          "options": {
-            "dependencies": {
-              "use_ssh_connection": true
-            }
-          }
+          "type": "string"
         },
         "#ssh_private_key": {
           "title": "SSH Private Key",
           "type": "string",
-          "format": "password",
-          "options": {
-            "dependencies": {
-              "use_ssh_connection": true
-            }
-          }
+          "format": "password"
         }
       }
     }
