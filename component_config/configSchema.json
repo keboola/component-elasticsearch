@@ -41,7 +41,7 @@
             "bearer",
             "no_auth"
           ],
-          "default": "basic",
+          "default": "no_auth",
           "options": {
             "enum_titles": [
               "Basic",

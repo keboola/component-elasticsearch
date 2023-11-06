@@ -93,6 +93,7 @@ class Component(ComponentBase):
     def initialize_ssh_client(params) -> Union[SSHClient, None]:
         ssh_params = params.get(KEY_GROUP_SSH)
         if ssh_params.get(KEY_SSH_HOSTNAME, False):
+            logging.info("Initializing SSH connection")
             ssh_host = ssh_params.get(KEY_SSH_HOSTNAME)
             ssh_port = ssh_params.get(KEY_SSH_PORT)
             ssh_username = ssh_params.get(KEY_SSH_USERNAME)
