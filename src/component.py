@@ -28,6 +28,7 @@ KEY_USERNAME = 'username'
 KEY_PASSWORD = '#password'
 KEY_API_KEY = '#api_key'
 KEY_BEARER = '#bearer'
+KEY_SCHEME = 'scheme'
 
 KEY_GROUP_DATE = 'date'
 KEY_DATE_APPEND = 'append_date'
@@ -103,8 +104,8 @@ class Component(ComponentBase):
         return ssh_client
 
     def process_extracted_data(self, temp_folder, mapping, out_table_name, user_defined_pk, incremental):
-        logging.info("Processing fetched data.")
         for subfolder in os.listdir(temp_folder):
+            logging.info(f"Processing data for table {subfolder}.")
             columns = mapping.get(subfolder, {}).get("columns", [])
             subfolder_path = os.path.join(temp_folder, subfolder)
 
@@ -140,31 +141,36 @@ class Component(ComponentBase):
 
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
+        scheme = params.get(KEY_SCHEME, "http")
 
-        setup = {"host": db_hostname, "port": db_port, "scheme": "http"}
+        if auth_type not in ["basic", "api_key", "bearer", "no_auth"]:
+            raise UserException(f"Invalid auth_type: {auth_type}")
 
+        setup = {"host": db_hostname, "port": db_port, "scheme": scheme}
+
+        auth = None
+
+        logging.info(f"The component will use {auth_type} type authorization.")
         if auth_type == "basic":
             username = auth_params.get(KEY_USERNAME)
             password = auth_params.get(KEY_PASSWORD)
-            setup["http_auth"] = (username, password)
-        elif auth_type == "api_key":
-            api_key = auth_params.get(KEY_API_KEY)
-            headers = {"Authorization": f"ApiKey {api_key}"}
-            setup["headers"] = headers
-        elif auth_type == "bearer":
-            bearer = auth_params.get(KEY_BEARER)
-            headers = {"Authorization": f"Bearer {bearer}"}
-            setup["headers"] = headers
-        elif auth_type == "no_auth":
-            pass
-        else:
-            raise UserException(f"Invalid auth_type: {auth_type}")
 
-        client = ElasticsearchClient([setup])
+            if not (username and password):
+                raise UserException("You must specify both username and password for basic type authorization")
 
-        # Check if the connection is established
+            auth = (username, password)
+
+        elif auth_type in ["api_key", "bearer"]:
+            token_key = {"api_key": KEY_API_KEY, "bearer": KEY_BEARER}[auth_type]
+            token_value = auth_params.get(token_key)
+
+            headers = {"Authorization": f"{auth_type.capitalize()} {token_value}"}
+            setup["headers"] = headers
+
+        client = ElasticsearchClient([setup], http_auth=auth)
+
         if not client.ping():
-            raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed!")
+            raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed")
 
         return client
 

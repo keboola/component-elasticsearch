@@ -15,8 +15,8 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, params: list[dict]):
-        super().__init__(params)
+    def __init__(self, hosts: list, http_auth: tuple = None):
+        super().__init__(hosts, http_auth=http_auth)
 
     def extract_data(self, index_name: str, query: str, destination: str, table_name: str,
                      mapping: dict = None) -> dict:

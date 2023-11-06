@@ -104,22 +104,36 @@
       "properties": {
         "ssh_hostname": {
           "title": "SSH Hostname",
-          "type": "string"
+          "type": "string",
+          "propertyOrder": 1
         },
         "ssh_port": {
           "title": "SSH Port",
-          "type": "integer"
+          "type": "integer",
+          "propertyOrder": 2
         },
         "ssh_username": {
           "title": "SSH Username",
-          "type": "string"
+          "type": "string",
+          "propertyOrder": 3
         },
         "#ssh_private_key": {
           "title": "SSH Private Key",
           "type": "string",
-          "format": "password"
+          "format": "password",
+          "propertyOrder": 4
         }
       }
+    },
+    "scheme": {
+      "title": "Scheme",
+      "type": "string",
+      "enum": [
+        "http",
+        "https"
+      ],
+      "default": "http",
+      "propertyOrder": 4
     }
   }
 }
