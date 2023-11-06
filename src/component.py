@@ -133,11 +133,12 @@ class Component(ComponentBase):
         if ssh_client:
             ssh_client.close()
 
-    @staticmethod
-    def get_client(params: dict) -> ElasticsearchClient:
+    def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
         db_params = params.get(KEY_GROUP_DB)
-        auth_type = auth_params.get(KEY_AUTH_TYPE)
+        auth_type = auth_params.get(KEY_AUTH_TYPE, False)
+        if not auth_type:
+            return self.get_client_legacy(params)
 
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
@@ -171,6 +172,16 @@ class Component(ComponentBase):
 
         if not client.ping():
             raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed")
+
+        return client
+
+    def get_client_legacy(self, params) -> ElasticsearchClient:
+        db_params = params.get(KEY_GROUP_DB)
+        db_hostname = db_params.get(KEY_DB_HOSTNAME)
+        db_port = db_params.get(KEY_DB_PORT)
+
+        setup = {"host": db_hostname, "port": db_port, "scheme": "http"}
+        client = ElasticsearchClient([setup])
 
         return client
 

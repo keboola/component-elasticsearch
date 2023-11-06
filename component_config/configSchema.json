@@ -98,7 +98,7 @@
       }
     },
     "ssh": {
-      "title": "Use SSH",
+      "title": "SSH",
       "type": "object",
       "propertyOrder": 3,
       "properties": {
