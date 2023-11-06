@@ -9,6 +9,7 @@ class SSHClient:
         self.username = username
         self.private_key = private_key
         self.ssh_client = None
+        self.tunnel = None
 
     def connect(self):
         self.ssh_client = paramiko.SSHClient()
@@ -24,6 +25,18 @@ class SSHClient:
             pkey=private_key
         )
 
+    def setup_tunnel(self, remote_host, remote_port, local_port):
+        if not self.ssh_client:
+            raise RuntimeError("SSH connection is not established")
+
+        self.tunnel = self.ssh_client.get_transport().open_channel(
+            'direct-tcpip',
+            (remote_host, remote_port),
+            ('127.0.0.1', local_port)
+        )
+
     def close(self):
         if self.ssh_client:
             self.ssh_client.close()
+        if self.tunnel:
+            self.tunnel.close()

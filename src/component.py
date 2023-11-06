@@ -92,15 +92,21 @@ class Component(ComponentBase):
     @staticmethod
     def initialize_ssh_client(params) -> Union[SSHClient, None]:
         ssh_params = params.get(KEY_GROUP_SSH)
+
         if ssh_params.get(KEY_SSH_HOSTNAME, False):
             logging.info("Initializing SSH connection")
             ssh_host = ssh_params.get(KEY_SSH_HOSTNAME)
             ssh_port = ssh_params.get(KEY_SSH_PORT)
             ssh_username = ssh_params.get(KEY_SSH_USERNAME)
             ssh_private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
-            ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
 
+            db_params = params.get(KEY_GROUP_DB)
+            db_hostname = db_params.get(KEY_DB_HOSTNAME)
+            db_port = db_params.get(KEY_DB_PORT)
+
+            ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
             ssh_client.connect()
+            ssh_client.setup_tunnel(db_hostname, db_port, 9200)
         else:
             ssh_client = None
         return ssh_client
@@ -177,7 +183,8 @@ class Component(ComponentBase):
 
         return client
 
-    def get_client_legacy(self, params) -> ElasticsearchClient:
+    @staticmethod
+    def get_client_legacy(params) -> ElasticsearchClient:
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
