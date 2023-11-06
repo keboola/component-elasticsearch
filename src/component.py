@@ -41,10 +41,10 @@ DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
 KEY_GROUP_SSH = 'ssh'
-KEY_SSH_HOSTNAME = 'ssh_hostname'
-KEY_SSH_PORT = 'ssh_port'
-KEY_SSH_USERNAME = 'ssh_username'
-KEY_SSH_PRIVATE_KEY = '#ssh_private_key'
+KEY_SSH_HOSTNAME = 'hostname'
+KEY_SSH_PORT = 'port'
+KEY_SSH_USERNAME = 'username'
+KEY_SSH_PRIVATE_KEY = '#private_key'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 

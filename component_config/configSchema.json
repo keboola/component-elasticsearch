@@ -102,22 +102,22 @@
       "type": "object",
       "propertyOrder": 3,
       "properties": {
-        "ssh_hostname": {
+        "hostname": {
           "title": "SSH Hostname",
           "type": "string",
           "propertyOrder": 1
         },
-        "ssh_port": {
+        "port": {
           "title": "SSH Port",
           "type": "integer",
           "propertyOrder": 2
         },
-        "ssh_username": {
+        "username": {
           "title": "SSH Username",
           "type": "string",
           "propertyOrder": 3
         },
-        "#ssh_private_key": {
+        "#private_key": {
           "title": "SSH Private Key",
           "type": "string",
           "format": "password",
