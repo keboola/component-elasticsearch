@@ -5,3 +5,4 @@ elasticsearch==8.10.1
 dateparser
 paramiko==2.8.0
 retry
+furl
