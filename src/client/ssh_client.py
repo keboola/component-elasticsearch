@@ -34,6 +34,7 @@ class SSHClient:
             raise RuntimeError("SSH connection is not established")
 
         transport = self.ssh_client.get_transport()
+        logging.info(f"local port: {local_port}, remote_host: {remote_host}, remote port: {remote_port}")
         transport.request_port_forward(("", local_port), remote_host, remote_port)
 
     def close(self):
