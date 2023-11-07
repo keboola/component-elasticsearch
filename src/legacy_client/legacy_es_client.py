@@ -9,8 +9,8 @@ import dateparser
 import pytz
 from keboola.component.base import ComponentBase
 
-from ssh_client import SshClient
-from result import Fetcher
+from legacy_client.ssh_client import SshClient
+from legacy_client.result import Fetcher
 
 KEY_INDEX_NAME = 'index_name'
 KEY_REQUEST_BODY = 'request_body'
