@@ -1,9 +1,10 @@
 from io import StringIO
 import paramiko
-
+import logging
 
 class SSHClient:
     def __init__(self, host, port, username, private_key):
+        self.transport = None
         self.host = host
         self.port = port
         self.username = username
@@ -18,6 +19,8 @@ class SSHClient:
 
         private_key = paramiko.RSAKey(file_obj=StringIO(self.private_key))
 
+        logging.info(f"Establishing SSH connection to {self.host}:{self.port}")
+
         self.ssh_client.connect(
             self.host,
             port=self.port,
@@ -29,14 +32,9 @@ class SSHClient:
         if not self.ssh_client:
             raise RuntimeError("SSH connection is not established")
 
-        self.tunnel = self.ssh_client.get_transport().open_channel(
-            'direct-tcpip',
-            (remote_host, remote_port),
-            ('127.0.0.1', local_port)
-        )
+        self.transport = self.ssh_client.get_transport()
+        self.transport.request_port_forward("", local_port, remote_host, remote_port)
 
     def close(self):
         if self.ssh_client:
             self.ssh_client.close()
-        if self.tunnel:
-            self.tunnel.close()
