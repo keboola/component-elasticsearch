@@ -2,6 +2,7 @@ from io import StringIO
 import paramiko
 import logging
 
+
 class SSHClient:
     def __init__(self, host, port, username, private_key):
         self.transport = None
