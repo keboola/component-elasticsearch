@@ -29,12 +29,13 @@ class SSHClient:
             pkey=private_key
         )
 
-    def setup_tunnel(self, remote_host, remote_port, local_port):
+    def setup_tunnel(self, remote_host, remote_port: int, local_port: int):
         if not self.ssh_client:
             raise RuntimeError("SSH connection is not established")
 
         transport = self.ssh_client.get_transport()
-        logging.info(f"local port: {local_port}, remote_host: {remote_host}, remote port: {remote_port}")
+
+        logging.info(f"Tunel local_port: {local_port}, remote_host: {remote_host}, remote port: {remote_port}")
         transport.request_port_forward(("", local_port), remote_host, remote_port)
 
     def close(self):
