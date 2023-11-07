@@ -143,11 +143,11 @@ class Component(ComponentBase):
 
     def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
-        db_params = params.get(KEY_GROUP_DB)
-        auth_type = auth_params.get(KEY_AUTH_TYPE, False)
-        if not auth_type:
+        if not auth_params:
             return self.get_client_legacy(params)
+        auth_type = auth_params.get(KEY_AUTH_TYPE, False)
 
+        db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
         scheme = params.get(KEY_SCHEME, "http")
