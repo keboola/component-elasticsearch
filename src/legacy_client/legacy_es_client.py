@@ -60,7 +60,7 @@ class LegacyClient(ComponentBase):
     def __init__(self):
         super().__init__()
 
-        logging.info(f"Running legacy ssh client.")
+        logging.info("Running legacy ssh client.")
 
         if self.configuration.parameters.get('debug', False) is True:
             logger = logging.getLogger()

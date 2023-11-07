@@ -4,7 +4,6 @@ import os
 import shutil
 import dateparser
 import pytz
-from typing import Union
 
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
