@@ -33,8 +33,8 @@ class SSHClient:
         if not self.ssh_client:
             raise RuntimeError("SSH connection is not established")
 
-        trans = self.ssh_client.get_transport()
-        trans.open_channel("forwarded-tcpip", dest_addr=(remote_host, remote_port), src_addr=('localhost', local_port))
+        transport = self.ssh_client.get_transport()
+        transport.request_port_forward(("", local_port), remote_host, remote_port)
 
     def close(self):
         if self.ssh_client:
