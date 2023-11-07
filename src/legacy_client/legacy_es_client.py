@@ -1,6 +1,5 @@
 import json
 import logging
-import sys
 from dataclasses import dataclass
 from keboola.csvwriter import ElasticDictWriter
 import csv
