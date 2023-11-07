@@ -40,6 +40,8 @@ DEFAULT_DATE = 'yesterday'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
+KEY_LEGACY_SSH = 'ssh'
+
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
 DEFAULT_QUERY = """
@@ -60,7 +62,7 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
 
-        if not params.get(KEY_AUTH_TYPE, False):
+        if params.get(KEY_LEGACY_SSH):
             self.run_legacy_client()
         else:
             out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
