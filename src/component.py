@@ -107,7 +107,7 @@ class Component(ComponentBase):
 
             ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
             ssh_client.connect()
-            ssh_client.setup_tunnel(db_hostname, int(db_port), int(db_port))
+            ssh_client.setup_tunnel(db_hostname, int(db_port))
         else:
             ssh_client = None
         return ssh_client
