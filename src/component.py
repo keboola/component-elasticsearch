@@ -40,12 +40,6 @@ DEFAULT_DATE = 'yesterday'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
-KEY_GROUP_SSH = 'ssh'
-KEY_SSH_HOSTNAME = 'hostname'
-KEY_SSH_PORT = 'port'
-KEY_SSH_USERNAME = 'username'
-KEY_SSH_PRIVATE_KEY = '#private_key'
-
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
 DEFAULT_QUERY = """
@@ -61,22 +55,20 @@ class Component(ComponentBase):
 
     def __init__(self):
         super().__init__()
-        self.ssh_client = None
 
     def run(self):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
 
-        out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
-        user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
-        incremental = params.get(KEY_INCREMENTAL, False)
-
-        index_name, query = self.parse_index_parameters(params)
-        statefile_mapping = self.get_state_file()
-
         if not params.get(KEY_AUTH_TYPE, False):
             self.run_legacy_client()
         else:
+            out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
+            user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
+            incremental = params.get(KEY_INCREMENTAL, False)
+
+            index_name, query = self.parse_index_parameters(params)
+            statefile_mapping = self.get_state_file()
             client = self.get_client(params)
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
@@ -119,11 +111,9 @@ class Component(ComponentBase):
 
             self.write_manifest(out_table)
 
-    def cleanup(self, temp_folder):
+    @staticmethod
+    def cleanup(temp_folder):
         shutil.rmtree(temp_folder)
-
-        if self.ssh_client:
-            self.ssh_client.close()
 
     def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)

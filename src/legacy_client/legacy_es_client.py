@@ -8,6 +8,7 @@ import csv
 import dateparser
 import pytz
 from keboola.component.base import ComponentBase
+from keboola.component.exceptions import UserException
 
 from legacy_client.ssh_client import SshClient
 from legacy_client.result import Fetcher
@@ -69,8 +70,7 @@ class LegacyClient(ComponentBase):
         try:
             self.validate_configuration_parameters(MANDATORY_PARAMS)
         except ValueError as e:
-            logging.exception(e)
-            sys.exit(1)
+            raise UserException(e)
 
         _db_object = self._parse_db_parameters()
         _ssh_object = self._parse_ssh_parameters()
@@ -87,15 +87,13 @@ class LegacyClient(ComponentBase):
         ssh_config = self.configuration.parameters.get(KEY_SSH, {})
 
         if ssh_config == {}:  # or ssh_config.get(KEY_SSH_USE) is False:
-            logging.info("SSH configuration not specified.")
-            sys.exit(1)
+            raise UserException("SSH configuration not specified.")
         else:
             try:
                 ssh_object = SshTunnel(ssh_config[KEY_SSH_HOST], ssh_config[KEY_SSH_PORT],
                                        ssh_config[KEY_SSH_USERNAME], ssh_config[KEY_SSH_PKEY])
             except KeyError as e:
-                logging.exception(f"Missing mandatory field {e} in SSH configuration.")
-                sys.exit(1)
+                raise UserException(f"Missing mandatory field {e} in SSH configuration.")
 
             return ssh_object
 
@@ -104,8 +102,7 @@ class LegacyClient(ComponentBase):
         try:
             db_object = Database(db_config[KEY_DB_HOST], db_config[KEY_DB_PORT])
         except KeyError as e:
-            logging.exception(f"Missing mandatory field {e} in DB configuration.")
-            sys.exit(1)
+            raise UserException(f"Missing mandatory field {e} in DB configuration.")
         return db_object
 
     def _parse_index_parameters(self):
@@ -120,17 +117,15 @@ class LegacyClient(ComponentBase):
             _date = dateparser.parse(date_config.get(KEY_DATE_SHIFT, 'yesterday'))
 
             if _date is None:
-                logging.error(f"Could not parse value {date_config[KEY_DATE_SHIFT]} to date.")
-                sys.exit(1)
+                raise UserException(f"Could not parse value {date_config[KEY_DATE_SHIFT]} to date.")
 
             _date = _date.replace(tzinfo=pytz.UTC)
 
             _tz = date_config.get(KEY_DATE_TZ, 'UTC')
 
             if _tz not in pytz.all_timezones:
-                logging.error(f"Incorrect timezone {_tz} provided. Timezone must be a valid DB timezone name. "
-                              "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
-                sys.exit(1)
+                raise UserException(f"Incorrect timezone {_tz} provided. Timezone must be a valid DB timezone name. "
+                                    "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
 
             _date_tz = pytz.timezone(_tz).normalize(_date)
             _date_formatted = _date_tz.strftime(date_config.get(KEY_DATE_FORMAT, '%Y-%m-%d'))
@@ -145,8 +140,7 @@ class LegacyClient(ComponentBase):
         try:
             request_body = json.loads(request_body_string)
         except ValueError:
-            logging.exception("Could not parse request body string to JSON.")
-            sys.exit(1)
+            raise UserException("Could not parse request body string to JSON.")
 
         return index, request_body
 
@@ -161,8 +155,7 @@ class LegacyClient(ComponentBase):
         try:
             scroll_json = json.loads(scroll_response)
         except ValueError as e:
-            logging.exception(f"Could not parse JSON response - {e}.")
-            sys.exit(1)
+            raise UserException(f"Could not parse JSON response - {e}.")
 
         return scroll_json.get('_scroll_id'), scroll_json['hits']['total'], scroll_json['hits']['hits']
 
@@ -179,12 +172,10 @@ class LegacyClient(ComponentBase):
         _fp_out, _fp_err = self.client.get_first_page(self.index, self.index_params)
 
         if _fp_out == '' and _fp_err != '':
-            logging.error(f"Could not download data. Error: {_fp_err}")
-            sys.exit(1)
+            raise UserException(f"Could not download data. Error: {_fp_err}")
 
         elif _fp_out == '' and _fp_err == '':
-            logging.error("No data returned.")
-            sys.exit(1)
+            raise UserException("No data returned.")
 
         else:
             pass
@@ -193,8 +184,7 @@ class LegacyClient(ComponentBase):
         stdout_sc, stdout_body = self.parse_curl_stdout(_fp_out)
 
         if stdout_sc != '200':
-            logging.error(f"Could not download data. Error: {stdout_body}.")
-            sys.exit(1)
+            raise UserException(f"Could not download data. Error: {stdout_body}.")
 
         else:
             _scroll_id, _nr_results, _results = self.parse_scroll(stdout_body)
@@ -218,9 +208,8 @@ class LegacyClient(ComponentBase):
                 _scroll_out, _scroll_err = self.client.get_scroll(_scroll_id)
 
                 if _scroll_out == '':
-                    logging.error(f"Could not download data for scroll {_scroll_id}.\n" +
-                                  f"STDERR: {_scroll_err}.")
-                    sys.exit(1)
+                    raise UserException(f"Could not download data for scroll {_scroll_id}.\n" +
+                                        f"STDERR: {_scroll_err}.")
 
                 else:
                     pass
@@ -228,8 +217,7 @@ class LegacyClient(ComponentBase):
                 stdout_sc, stdout_body = self.parse_curl_stdout(_scroll_out)
 
                 if stdout_sc != '200':
-                    logging.error(f"Could not download data. Error: {stdout_body}.")
-                    sys.exit(1)
+                    raise UserException(f"Could not download data. Error: {stdout_body}.")
 
                 else:
                     _scroll_id, _, _results = self.parse_scroll(stdout_body)

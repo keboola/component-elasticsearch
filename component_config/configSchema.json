@@ -97,34 +97,6 @@
         }
       }
     },
-    "ssh": {
-      "title": "SSH",
-      "type": "object",
-      "propertyOrder": 3,
-      "properties": {
-        "hostname": {
-          "title": "SSH Hostname",
-          "type": "string",
-          "propertyOrder": 1
-        },
-        "port": {
-          "title": "SSH Port",
-          "type": "integer",
-          "propertyOrder": 2
-        },
-        "username": {
-          "title": "SSH Username",
-          "type": "string",
-          "propertyOrder": 3
-        },
-        "#private_key": {
-          "title": "SSH Private Key",
-          "type": "string",
-          "format": "password",
-          "propertyOrder": 4
-        }
-      }
-    },
     "scheme": {
       "title": "Scheme",
       "type": "string",
