@@ -11,7 +11,8 @@ from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
 
 from client.es_client import ElasticsearchClient
-from client.ssh_client import SSHClient
+from legacy_client.legacy_es_client import LegacyClient
+
 
 # configuration variables
 KEY_GROUP_DB = 'db'
@@ -74,43 +75,27 @@ class Component(ComponentBase):
         index_name, query = self.parse_index_parameters(params)
         statefile_mapping = self.get_state_file()
 
-        self.ssh_client = self.initialize_ssh_client(params)
+        if not params.get(KEY_AUTH_TYPE, False):
+            self.run_legacy_client()
+        else:
+            client = self.get_client(params)
 
-        client = self.get_client(params)
+            temp_folder = os.path.join(self.data_folder_path, "temp")
+            os.makedirs(temp_folder, exist_ok=True)
 
-        temp_folder = os.path.join(self.data_folder_path, "temp")
-        os.makedirs(temp_folder, exist_ok=True)
+            result_mapping = client.extract_data(index_name, query, temp_folder, out_table_name, statefile_mapping)
 
-        result_mapping = client.extract_data(index_name, query, temp_folder, out_table_name, statefile_mapping)
+            mapping = self.extract_table_details(result_mapping)
 
-        mapping = self.extract_table_details(result_mapping)
+            self.process_extracted_data(temp_folder, mapping, out_table_name, user_defined_pk, incremental)
 
-        self.process_extracted_data(temp_folder, mapping, out_table_name, user_defined_pk, incremental)
-
-        self.cleanup(temp_folder)
-        self.write_state_file(result_mapping)
+            self.cleanup(temp_folder)
+            self.write_state_file(result_mapping)
 
     @staticmethod
-    def initialize_ssh_client(params) -> Union[SSHClient, None]:
-        ssh_params = params.get(KEY_GROUP_SSH)
-
-        if ssh_params.get(KEY_SSH_HOSTNAME, False):
-            logging.info("Initializing SSH connection")
-            ssh_host = ssh_params.get(KEY_SSH_HOSTNAME)
-            ssh_port = ssh_params.get(KEY_SSH_PORT)
-            ssh_username = ssh_params.get(KEY_SSH_USERNAME)
-            ssh_private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
-
-            db_params = params.get(KEY_GROUP_DB)
-            db_hostname = db_params.get(KEY_DB_HOSTNAME)
-            db_port = db_params.get(KEY_DB_PORT)
-
-            ssh_client = SSHClient(ssh_host, ssh_port, ssh_username, ssh_private_key)
-            ssh_client.connect()
-            ssh_client.setup_tunnel(db_hostname, int(db_port))
-        else:
-            ssh_client = None
-        return ssh_client
+    def run_legacy_client() -> None:
+        client = LegacyClient()
+        client.run()
 
     def process_extracted_data(self, temp_folder, mapping, out_table_name, user_defined_pk, incremental):
         for subfolder in os.listdir(temp_folder):
