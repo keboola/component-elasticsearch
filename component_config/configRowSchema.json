@@ -80,11 +80,15 @@
             "title": "Primary Keys",
             "description": "Specify primary keys for the storage table.",
             "type": "array",
-            "propertyOrder": 500,
+            "format": "select",
             "items": {
-                "type": "string",
-                "title": "Column"
-            }
+                  "type": "string"
+                },
+            "options": {
+                  "tags": true
+                },
+            "propertyOrder": 500,
+            "uniqueItems": true
         },
         "incremental": {
             "title": "Load Type",
