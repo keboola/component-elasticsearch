@@ -187,6 +187,7 @@ class Component(ComponentBase):
         query_string = _query if _query != '' else '{}'
 
         try:
+            logging.info(f"Using query: {query_string}")
             return json.loads(query_string)
         except ValueError:
             raise UserException("Could not parse request body string to JSON.")
