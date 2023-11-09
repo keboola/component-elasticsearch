@@ -1,6 +1,6 @@
 {
-  "title": "DB & SSH",
-  "description": "Set-up shared database and SSH settings.",
+  "title": "Authorization",
+  "description": "Set-up database settings.",
   "type": "object",
   "required": [
     "db"

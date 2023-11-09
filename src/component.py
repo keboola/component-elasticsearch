@@ -17,7 +17,7 @@ from legacy_client.legacy_es_client import LegacyClient
 KEY_GROUP_DB = 'db'
 KEY_DB_HOSTNAME = 'hostname'
 KEY_DB_PORT = 'port'
-KEY_QUERY = 'query'
+KEY_QUERY = 'request_body'  # this is named like this for backwards compatibility
 KEY_INDEX_NAME = 'index_name'
 KEY_STORAGE_TABLE = 'storage_table'
 KEY_PRIMARY_KEYS = 'primary_keys'

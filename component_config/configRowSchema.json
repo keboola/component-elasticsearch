@@ -15,7 +15,7 @@
             "type": "string",
             "propertyOrder": 100
         },
-        "query": {
+        "request_body": {
             "title": "Query",
             "description": "Query (in JSON), which will be sent together with a request. Allows to specify returned columns and other useful parameters. See <a href='https://www.elastic.co/guide/en/elasticsearch/reference/7.x/search-search.html#search-search-api-request-body' target='_blank'>Search API documentation</a> for all possible attributes.</br>You can also specify <a href='https://www.elastic.co/guide/en/elasticsearch/reference/current/scroll-api.html#scroll-api-query-params' target='_blank'><scroll>scroll</scroll></a> parameter to manage scroll length.",
             "type": "string",
