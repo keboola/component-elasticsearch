@@ -43,12 +43,14 @@ class ElasticsearchClient(Elasticsearch):
         results = [hit["_source"] for hit in response['hits']['hits']]
         parsed = parser.parse_data(results)
         self._save_results(parsed, destination)
+        parser._csv_file_results = {}
 
         while len(response['hits']['hits']):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
             results = [hit["_source"] for hit in response['hits']['hits']]
             parsed = parser.parse_data(results)
             self._save_results(parsed, destination)
+            parser._csv_file_results = {}
 
         return parser.table_mapping.as_dict()
 
