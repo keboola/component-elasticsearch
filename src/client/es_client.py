@@ -33,26 +33,30 @@ class ElasticsearchClient(Elasticsearch):
         Returns:
             dict
         """
-        if not mapping:
-            parser = Parser(main_table_name=table_name, analyze_further=True)
-        else:
-            mapping = TableMapping.build_from_mapping_dict(mapping)
-            parser = Parser(table_name, table_mapping=mapping)
+        parser = self._initialize_parser(table_name, mapping)
 
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
+        self._process_response(response, parser, destination)
+
+        while len(response['hits']['hits']):
+            response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
+            self._process_response(response, parser, destination)
+
+        return parser.table_mapping.as_dict()
+
+    @staticmethod
+    def _initialize_parser(table_name: str, mapping: dict = None) -> Parser:
+        if not mapping:
+            return Parser(main_table_name=table_name, analyze_further=True)
+        else:
+            table_mapping = TableMapping.build_from_mapping_dict(mapping)
+            return Parser(table_name, table_mapping=table_mapping)
+
+    def _process_response(self, response: dict, parser: Parser, destination: str) -> None:
         results = [hit["_source"] for hit in response['hits']['hits']]
         parsed = parser.parse_data(results)
         self._save_results(parsed, destination)
         parser._csv_file_results = {}
-
-        while len(response['hits']['hits']):
-            response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
-            results = [hit["_source"] for hit in response['hits']['hits']]
-            parsed = parser.parse_data(results)
-            self._save_results(parsed, destination)
-            parser._csv_file_results = {}
-
-        return parser.table_mapping.as_dict()
 
     @staticmethod
     def _save_results(results: dict, destination: str) -> None:
