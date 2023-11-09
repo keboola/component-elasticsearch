@@ -15,8 +15,13 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, http_auth: tuple = None):
-        super().__init__(hosts, http_auth=http_auth)
+    def __init__(self, hosts: list, http_auth: tuple = None, api_key: tuple = None):
+        if http_auth:
+            super().__init__(hosts, http_auth=http_auth)
+        elif api_key:
+            super().__init__(hosts, api_key=api_key)
+        else:
+            super().__init__(hosts)
 
     def extract_data(self, index_name: str, query: str, destination: str, table_name: str,
                      mapping: dict = None) -> dict:

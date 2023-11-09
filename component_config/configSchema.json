@@ -46,7 +46,6 @@
             "enum_titles": [
               "Basic",
               "API key",
-              "Bearer",
               "No Authentication"
             ]
           },
@@ -73,10 +72,9 @@
           },
           "propertyOrder": 3
         },
-        "#api_key": {
-          "title": "API Key",
+        "api_key_id": {
+          "title": "API Key ID",
           "type": "string",
-          "format": "password",
           "options": {
             "dependencies": {
               "auth_type": "api_key"
@@ -84,13 +82,13 @@
           },
           "propertyOrder": 4
         },
-        "#bearer": {
-          "title": "Bearer Token",
+        "#api_key": {
+          "title": "API Key",
           "type": "string",
           "format": "password",
           "options": {
             "dependencies": {
-              "auth_type": "bearer"
+              "auth_type": "api_key"
             }
           },
           "propertyOrder": 5

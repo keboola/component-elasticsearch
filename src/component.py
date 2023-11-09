@@ -26,6 +26,7 @@ KEY_GROUP_AUTH = 'authentication'
 KEY_AUTH_TYPE = 'auth_type'
 KEY_USERNAME = 'username'
 KEY_PASSWORD = '#password'
+KEY_API_KEY_ID = 'api_key_id'
 KEY_API_KEY = '#api_key'
 KEY_BEARER = '#bearer'
 KEY_SCHEME = 'scheme'
@@ -133,9 +134,8 @@ class Component(ComponentBase):
 
         setup = {"host": db_hostname, "port": db_port, "scheme": scheme}
 
-        auth = None
-
         logging.info(f"The component will use {auth_type} type authorization.")
+
         if auth_type == "basic":
             username = auth_params.get(KEY_USERNAME)
             password = auth_params.get(KEY_PASSWORD)
@@ -144,15 +144,16 @@ class Component(ComponentBase):
                 raise UserException("You must specify both username and password for basic type authorization")
 
             auth = (username, password)
-
-        elif auth_type in ["api_key", "bearer"]:
-            token_key = {"api_key": KEY_API_KEY, "bearer": KEY_BEARER}[auth_type]
-            token_value = auth_params.get(token_key)
-
-            headers = {"Authorization": f"{auth_type.capitalize()} {token_value}"}
-            setup["headers"] = headers
-
-        client = ElasticsearchClient([setup], http_auth=auth)
+            client = ElasticsearchClient([setup], http_auth=auth)
+        elif auth_type == "api_key":
+            api_key_id = auth_params.get(KEY_API_KEY_ID)
+            api_key = auth_params.get(KEY_API_KEY)
+            api_key = (api_key_id, api_key)
+            client = ElasticsearchClient([setup], api_key=api_key)
+        elif auth_type == "no_auth":
+            client = ElasticsearchClient([setup])
+        else:
+            raise UserException(f"Unsupported auth_type: {auth_type}")
 
         if not client.ping():
             raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed")
