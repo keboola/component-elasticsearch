@@ -14,9 +14,7 @@ except ModuleNotFoundError:
 class CustomDatadirTest(TestDataDir):
 
     def setUp(self):
-        host = os.getenv("BITBUCKET_DOCKER_HOST_INTERNAL")
-        if not host:
-            host = "host.docker.internal"
+        host = os.getenv("ELASTICSEARCH_HOST")
         print(f"Connecting to host: {host}")
         ELASTICSEARCH_HOSTS = [{'host': host, 'port': 9200, 'scheme': 'http'}]
         INDEX_NAME = 'myindex'
