@@ -4,7 +4,7 @@ from freezegun import freeze_time
 from elasticsearch import Elasticsearch
 from faker import Faker
 import os
-from time import time
+from time import sleep
 
 try:
     from component import Component
@@ -22,7 +22,7 @@ class CustomDatadirTest(TestDataDir):
         ELASTICSEARCH_USERNAME = 'elastic'
         ELASTICSEARCH_PASSWORD = 'root'
 
-        time.sleep(30)
+        sleep(30)
 
         inserter = ElasticSearchDataInserter(
             ELASTICSEARCH_HOSTS, INDEX_NAME, ELASTICSEARCH_USERNAME, ELASTICSEARCH_PASSWORD
