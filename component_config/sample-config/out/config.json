@@ -12,7 +12,7 @@
     "incremental": true,
     "storage_table": "search_analytics",
     "db": {
-      "hostname": "host.docker.internal",
+      "hostname": "localhost",
       "port": 9200
     },
     "authentication": {

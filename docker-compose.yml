@@ -4,11 +4,12 @@ services:
   dev:
     build: .
     volumes:
-        - ./:/code
-        - ./data:/data
+      - ./:/code
+      - ./data:/data
     environment:
       - KBC_DATADIR=./data
     mem_limit: 1024m
+
   test:
     # Use to run flake8 and unittests checks
     build: .
@@ -17,6 +18,28 @@ services:
       - ./data:/data
     environment:
       - KBC_DATADIR=./data
+    depends_on:
+      - elasticsearch
     command:
       - /bin/sh
       - /code/scripts/build_n_test.sh
+
+  # Elasticsearch service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=root
+      - xpack.security.http.ssl.enabled=false
+
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+
+  # Your application service
+  app: &app
+    build: .
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch  # Add this line to configure Elasticsearch
+    links:
+      - elasticsearch  # Link to the Elasticsearch service
