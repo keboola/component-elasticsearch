@@ -18,10 +18,6 @@ The sample `/data` folder can be found in the [component's repository](https://b
 
 In Keboola, the component is set up as a row-based component and thus certain parameters (SSH & DB settings) have to be configured only once, while index specific settings can be configured for each index separately.
 
-## Database and SSH Settings
-
-Elasticsearch extractor currently supports only connection to the Elasticsearch instance over SSH tunnel. For successful connection, all database and SSH properties must be configured.
-
 ### Database (`db`) settings
 
 The database host and port need to be provided to correctly connect to the engine and download index data.
@@ -44,9 +40,18 @@ The correct JSON specification of the database settings then takes the following
 }
 ```
 
-### SSH (`ssh`) settings
+## Authentication methods
 
-Connection to the Elasticsearch instance via an SSH server is supported by the extractor
+Elasticsearch extractor currently supports following authentication methods:
+- **No auth**
+- **Basic** - Username + password combination
+- **API key**
+- **SSH + No auth (LEGACY)** - This authentication option is still supported, although not recommended.
+
+
+### SSH (`ssh`) settings (LEGACY OPTION)
+
+Connection to the Elasticsearch instance via an SSH server is still supported by the extractor
 
 Required parameters for SSH section of the configuration are:
 
