@@ -4,7 +4,6 @@ from freezegun import freeze_time
 from elasticsearch import Elasticsearch
 from faker import Faker
 import os
-from time import sleep
 
 try:
     from component import Component
@@ -16,14 +15,14 @@ class CustomDatadirTest(TestDataDir):
 
     def setUp(self):
         host = os.getenv("BITBUCKET_DOCKER_HOST_INTERNAL")
+        if not host:
+            host = "host.docker.internal"
         print(f"Connecting to host: {host}")
         ELASTICSEARCH_HOSTS = [{'host': host, 'port': 9200, 'scheme': 'http'}]
         INDEX_NAME = 'myindex'
         NUM_RECORDS = 10
         ELASTICSEARCH_USERNAME = 'elastic'
         ELASTICSEARCH_PASSWORD = 'root'
-
-        sleep(30)
 
         inserter = ElasticSearchDataInserter(
             ELASTICSEARCH_HOSTS, INDEX_NAME, ELASTICSEARCH_USERNAME, ELASTICSEARCH_PASSWORD
