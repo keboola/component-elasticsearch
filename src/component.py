@@ -144,14 +144,14 @@ class Component(ComponentBase):
                 raise UserException("You must specify both username and password for basic type authorization")
 
             auth = (username, password)
-            client = ElasticsearchClient([setup], http_auth=auth)
+            client = ElasticsearchClient([setup], scheme, http_auth=auth)
         elif auth_type == "api_key":
             api_key_id = auth_params.get(KEY_API_KEY_ID)
             api_key = auth_params.get(KEY_API_KEY)
             api_key = (api_key_id, api_key)
-            client = ElasticsearchClient([setup], api_key=api_key)
+            client = ElasticsearchClient([setup], scheme, api_key=api_key)
         elif auth_type == "no_auth":
-            client = ElasticsearchClient([setup])
+            client = ElasticsearchClient([setup], scheme)
         else:
             raise UserException(f"Unsupported auth_type: {auth_type}")
 

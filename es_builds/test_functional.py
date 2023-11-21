@@ -15,6 +15,8 @@ class CustomDatadirTest(TestDataDir):
 
     def setUp(self):
         host = os.getenv("ELASTICSEARCH_HOST")
+        if not host:
+            host = "host.docker.internal"
         print(f"Connecting to host: {host}")
         ELASTICSEARCH_HOSTS = [{'host': host, 'port': 9200, 'scheme': 'http'}]
         INDEX_NAME = 'myindex'

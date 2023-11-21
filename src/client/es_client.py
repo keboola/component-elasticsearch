@@ -1,7 +1,10 @@
-from elasticsearch import Elasticsearch
 import uuid
 import json
 import os
+import typing as t
+
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ApiError, TransportError
 
 from keboola.json_to_csv import Parser, TableMapping
 
@@ -15,13 +18,18 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, http_auth: tuple = None, api_key: tuple = None):
+    def __init__(self, hosts: list, scheme: str, http_auth: tuple = None, api_key: tuple = None):
+        options = {"hosts": hosts}
+
+        if scheme == "https":
+            options.update({"verify_certs": False, "ssl_show_warn": False})
+
         if http_auth:
-            super().__init__(hosts, http_auth=http_auth)
+            options.update({"http_auth": http_auth})
         elif api_key:
-            super().__init__(hosts, api_key=api_key)
-        else:
-            super().__init__(hosts)
+            options.update({"api_key": api_key})
+
+        super().__init__(**options)
 
     def extract_data(self, index_name: str, query: str, destination: str, table_name: str,
                      mapping: dict = None) -> dict:
@@ -72,3 +80,38 @@ class ElasticsearchClient(Elasticsearch):
             full_path = os.path.join(path, f"{uuid.uuid4()}.json")
             with open(full_path, "w") as json_file:
                 json.dump(results.get(result), json_file, indent=4)
+
+    def ping(
+        self,
+        *,
+        error_trace: t.Optional[bool] = None,
+        filter_path: t.Optional[t.Union[t.List[str], str]] = None,
+        human: t.Optional[bool] = None,
+        pretty: t.Optional[bool] = None,
+    ) -> bool:
+        """
+        Returns True if a successful response returns from the info() API,
+        otherwise returns False. This API call can fail either at the transport
+        layer (due to connection errors or timeouts) or from a non-2XX HTTP response
+        (due to authentication or authorization issues).
+
+        If you want to discover why the request failed you should use the ``info()`` API.
+
+        `<https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html>`_
+        """
+        __path = "/"
+        __query: t.Dict[str, t.Any] = {}
+        if error_trace is not None:
+            __query["error_trace"] = error_trace
+        if filter_path is not None:
+            __query["filter_path"] = filter_path
+        if human is not None:
+            __query["human"] = human
+        if pretty is not None:
+            __query["pretty"] = pretty
+        __headers = {"accept": "application/json"}
+        try:
+            self.perform_request("HEAD", __path, params=__query, headers=__headers)
+            return True
+        except (ApiError, TransportError) as e:
+            raise ElasticsearchClientException(e)
