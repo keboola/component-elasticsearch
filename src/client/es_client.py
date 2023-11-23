@@ -18,7 +18,7 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, scheme: str, http_auth: tuple = None, api_key: tuple = None):
+    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
         options = {"hosts": hosts}
 
         if scheme == "https":
