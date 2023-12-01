@@ -213,10 +213,10 @@ class Component(ComponentBase):
                                 "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
         return tz
 
-    def extract_table_details(self, data, parent_prefix=''):
-        output = {}
+    def extract_table_details(self, data, parent_prefix='', output=None):
+        if output is None:
+            output = {}
 
-        # Get the current table name with any necessary prefixes
         current_table_name = parent_prefix + data["table_name"]
 
         # Store columns and primary keys for the current table
@@ -227,7 +227,8 @@ class Component(ComponentBase):
 
         # If there are child tables, extract details recursively for each child table
         for child_name, child_data in data["child_tables"].items():
-            output.update(self.extract_table_details(child_data, current_table_name + "_"))
+            child_output = self.extract_table_details(child_data, current_table_name + "_")
+            output.update(child_output)
 
         return output
 
