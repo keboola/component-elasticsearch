@@ -69,7 +69,7 @@ class ElasticsearchClient(Elasticsearch):
         results = [hit["_source"] for hit in response['hits']['hits']]
         parsed = parser.parse_data(results)
         self._save_results(parsed, destination)
-        parser._csv_file_results = {}
+        # parser._csv_file_results = {}
 
     @staticmethod
     def _save_results(results: dict, destination: str) -> None:
