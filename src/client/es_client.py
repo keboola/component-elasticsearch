@@ -1,6 +1,7 @@
 import uuid
 import json
 import os
+import sys
 import typing as t
 
 from elasticsearch import Elasticsearch
@@ -69,7 +70,10 @@ class ElasticsearchClient(Elasticsearch):
         results = [hit["_source"] for hit in response['hits']['hits']]
         parsed = parser.parse_data(results)
         self._save_results(parsed, destination)
-        # parser._csv_file_results = {}
+
+        # this is a hack to prevent oom
+        for table in parser._csv_file_results:
+            parser._csv_file_results[table].rows = []
 
     @staticmethod
     def _save_results(results: dict, destination: str) -> None:
@@ -115,3 +119,8 @@ class ElasticsearchClient(Elasticsearch):
             return True
         except (ApiError, TransportError) as e:
             raise ElasticsearchClientException(e)
+
+    def get_size_in_mb(self, obj):
+        size_in_bytes = sys.getsizeof(obj)
+        size_in_mb = size_in_bytes / (1024.0 ** 2)
+        return size_in_mb

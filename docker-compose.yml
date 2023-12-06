@@ -1,53 +1,22 @@
 version: "2"
 services:
-  app: &app
-    build: .
-    environment:
-      ELASTICSEARCH_HOST: elasticsearch  # Add this line to configure Elasticsearch
-    links:
-      - elasticsearch  # Link to the Elasticsearch service
   # for development purposes
   dev:
-    <<: *app
     build: .
     volumes:
-      - ./:/code
-      - ./data:/data
+        - ./:/code
+        - ./data:/data
     environment:
       - KBC_DATADIR=./data
     mem_limit: 1024m
-
-  # Elasticsearch service
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
-    environment:
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=root
-      - xpack.security.http.ssl.enabled=false
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-
-  wait:
-    image: waisbrot/wait
-    depends_on:
-      - elasticsearch
-    environment:
-      - TARGETS=elasticsearch:9200
-      - TIMEOUT=200
-
   test:
-    <<: *app
-    links:
-      - elasticsearch
+    # Use to run flake8 and unittests checks
     build: .
     volumes:
       - ./:/code
       - ./data:/data
     environment:
       - KBC_DATADIR=./data
-    depends_on:
-      - wait
     command:
       - /bin/sh
       - /code/scripts/build_n_test.sh
