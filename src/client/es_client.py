@@ -1,7 +1,6 @@
 import uuid
 import json
 import os
-import sys
 import typing as t
 
 from elasticsearch import Elasticsearch
@@ -9,7 +8,7 @@ from elasticsearch.exceptions import ApiError, TransportError
 
 from keboola.json_to_csv import Parser, TableMapping
 
-DEFAULT_SIZE = 1000
+DEFAULT_SIZE = 5000
 SCROLL_TIMEOUT = '15m'
 
 
@@ -119,8 +118,3 @@ class ElasticsearchClient(Elasticsearch):
             return True
         except (ApiError, TransportError) as e:
             raise ElasticsearchClientException(e)
-
-    def get_size_in_mb(self, obj):
-        size_in_bytes = sys.getsizeof(obj)
-        size_in_mb = size_in_bytes / (1024.0 ** 2)
-        return size_in_mb
