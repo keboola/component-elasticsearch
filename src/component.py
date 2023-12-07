@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 import os
 import shutil
 import dateparser
@@ -8,6 +9,7 @@ import pytz
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
+from keboola.json_to_csv import Parser, TableMapping
 
 from client.es_client import ElasticsearchClient
 from legacy_client.legacy_es_client import LegacyClient
@@ -66,7 +68,11 @@ class Component(ComponentBase):
         if params.get(KEY_LEGACY_SSH):
             self.run_legacy_client()
         else:
-            out_table_name = params.get(KEY_STORAGE_TABLE, "ex-elasticsearch-result")
+            out_table_name = params.get(KEY_STORAGE_TABLE, False)
+            if not out_table_name:
+                out_table_name = "ex-elasticsearch-result"
+                logging.info(f"Using default output table name: {out_table_name}")
+
             user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
             incremental = params.get(KEY_INCREMENTAL, False)
 
@@ -74,16 +80,19 @@ class Component(ComponentBase):
             statefile_mapping = self.get_state_file()
             client = self.get_client(params)
 
-            temp_folder = os.path.join(self.data_folder_path, "temp")
-            os.makedirs(temp_folder, exist_ok=True)
+            self.temp_folder = os.path.join(self.data_folder_path, "temp")
+            self.raw_folder = os.path.join(self.temp_folder, "raw")
+            self.processed_folder = os.path.join(self.temp_folder, "processed")
+            os.makedirs(self.raw_folder, exist_ok=True)
+            os.makedirs(self.processed_folder, exist_ok=True)
 
-            result_mapping = client.extract_data(index_name, query, temp_folder, out_table_name, statefile_mapping)
+            client.extract_data(index_name, query, self.raw_folder)
 
-            mapping = self.extract_table_details(result_mapping)
+            parser = self._initialize_parser(out_table_name, statefile_mapping)
 
-            self.process_extracted_data(temp_folder, mapping, out_table_name, user_defined_pk, incremental)
+            result_mapping = self.process_extracted_data(parser, out_table_name, user_defined_pk, incremental)
 
-            self.cleanup(temp_folder)
+            self.cleanup()
             self.write_state_file(result_mapping)
 
     @staticmethod
@@ -91,11 +100,36 @@ class Component(ComponentBase):
         client = LegacyClient()
         client.run()
 
-    def process_extracted_data(self, temp_folder, mapping, out_table_name, user_defined_pk, incremental):
-        for subfolder in os.listdir(temp_folder):
-            logging.info(f"Processing data for table {subfolder}.")
+    @staticmethod
+    def _save_results(results: dict, destination: str) -> None:
+        for result in results:
+            path = os.path.join(destination, result)
+            os.makedirs(path, exist_ok=True)
+
+            full_path = os.path.join(path, f"{uuid.uuid4()}.json")
+            with open(full_path, "w") as json_file:
+                json.dump(results.get(result), json_file, indent=4)
+
+    def process_extracted_data(self, parser, out_table_name, user_defined_pk, incremental):
+        logging.info("Parsing raw data.")
+        for file in os.listdir(self.raw_folder):
+            filepath = os.path.join(self.raw_folder, file)
+            with open(filepath, 'r') as in_f:
+                data = json.load(in_f)
+                parsed = parser.parse_data(data)
+                self._save_results(parsed, self.processed_folder)
+
+            # this is a hack to prevent oom
+            for table in parser._csv_file_results:
+                parser._csv_file_results[table].rows = []
+
+        result_mapping = parser.table_mapping.as_dict()
+        mapping = self.extract_table_details(result_mapping)
+
+        for subfolder in os.listdir(self.processed_folder):
+
             columns = mapping.get(subfolder, {}).get("columns", [])
-            subfolder_path = os.path.join(temp_folder, subfolder)
+            subfolder_path = os.path.join(self.processed_folder, subfolder)
 
             if subfolder != out_table_name:
                 pk = mapping.get(subfolder, {}).get("primary_keys", [])
@@ -114,9 +148,10 @@ class Component(ComponentBase):
 
             self.write_manifest(out_table)
 
-    @staticmethod
-    def cleanup(temp_folder):
-        shutil.rmtree(temp_folder)
+        return result_mapping
+
+    def cleanup(self):
+        shutil.rmtree(self.temp_folder)
 
     def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
@@ -231,6 +266,14 @@ class Component(ComponentBase):
             output.update(child_output)
 
         return output
+
+    @staticmethod
+    def _initialize_parser(table_name: str, mapping: dict = None) -> Parser:
+        if not mapping:
+            return Parser(main_table_name=table_name, analyze_further=True)
+        else:
+            table_mapping = TableMapping.build_from_mapping_dict(mapping)
+            return Parser(table_name, table_mapping=table_mapping)
 
 
 """
