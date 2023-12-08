@@ -6,7 +6,7 @@ import typing as t
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
 
-DEFAULT_SIZE = 5000
+DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
 
 
@@ -43,6 +43,7 @@ class ElasticsearchClient(Elasticsearch):
         """
 
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
+        os.makedirs(destination, exist_ok=True)
         self._process_response(response, destination)
 
         while len(response['hits']['hits']):
@@ -55,7 +56,6 @@ class ElasticsearchClient(Elasticsearch):
 
     @staticmethod
     def _save_results(results: list, destination: str) -> None:
-        os.makedirs(destination, exist_ok=True)
         full_path = os.path.join(destination, f"{uuid.uuid4()}.json")
         with open(full_path, "w") as json_file:
             json.dump(results, json_file, indent=4)
