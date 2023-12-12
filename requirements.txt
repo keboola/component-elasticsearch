@@ -11,3 +11,4 @@ freezegun
 https://bitbucket.org/kds_consulting_team/datadirtest/get/1.5.1.zip#egg=datadirtest
 pytest
 faker
+cryptography==36.0.2 # to supress Blowfish warnings from Paramiko

@@ -84,7 +84,7 @@ class Component(ComponentBase):
 
             columns = statefile.get(out_table_name, [])
             out_table = self.create_out_table_definition(out_table_name, primary_key=user_defined_pk,
-                                                         incremental=incremental, columns=columns)
+                                                         incremental=incremental)
 
             with ElasticDictWriter(out_table.full_path, columns) as wr:
                 for result in client.extract_data(index_name, query):
