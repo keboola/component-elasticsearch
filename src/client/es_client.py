@@ -1,4 +1,3 @@
-import collections
 import json
 import typing as t
 from typing import Iterable
