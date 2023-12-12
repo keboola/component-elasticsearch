@@ -9,7 +9,6 @@ import pytz
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
-from keboola.json_to_csv import Parser, TableMapping
 
 from client.es_client import ElasticsearchClient
 from legacy_client.legacy_es_client import LegacyClient
@@ -77,81 +76,34 @@ class Component(ComponentBase):
             incremental = params.get(KEY_INCREMENTAL, False)
 
             index_name, query = self.parse_index_parameters(params)
-            statefile_mapping = self.get_state_file()
+            statefile = self.get_state_file()
             client = self.get_client(params)
 
-            self.temp_folder = os.path.join(self.data_folder_path, "temp")
-            self.raw_folder = os.path.join(self.temp_folder, "raw")
-            self.processed_folder = os.path.join(self.temp_folder, "processed")
-            os.makedirs(self.raw_folder, exist_ok=True)
-            os.makedirs(self.processed_folder, exist_ok=True)
+            temp_folder = os.path.join(self.data_folder_path, "temp")
+            os.makedirs(temp_folder, exist_ok=True)
 
-            client.extract_data(index_name, query, self.raw_folder)
+            columns = statefile.get(out_table_name, [])
+            out_table = self.create_out_table_definition(out_table_name, primary_key=user_defined_pk,
+                                                         incremental=incremental, columns=columns)
 
-            parser = self._initialize_parser(out_table_name, statefile_mapping)
+            with ElasticDictWriter(out_table.full_path, columns) as wr:
+                for result in client.extract_data(index_name, query):
+                    wr.writerow(result)
+                wr.writeheader()
 
-            result_mapping = self.process_extracted_data(parser, out_table_name, user_defined_pk, incremental)
+            self.write_manifest(out_table)
 
-            self.cleanup()
-            self.write_state_file(result_mapping)
+            statefile[out_table_name] = wr.fieldnames
+            self.write_state_file(statefile)
+            self.cleanup(temp_folder)
 
     @staticmethod
     def run_legacy_client() -> None:
         client = LegacyClient()
         client.run()
 
-    @staticmethod
-    def _save_results(results: dict, destination: str) -> None:
-        for result in results:
-            path = os.path.join(destination, result)
-            os.makedirs(path, exist_ok=True)
-
-            full_path = os.path.join(path, f"{uuid.uuid4()}.json")
-            with open(full_path, "w") as json_file:
-                json.dump(results.get(result), json_file, indent=4)
-
-    def process_extracted_data(self, parser, out_table_name, user_defined_pk, incremental):
-        logging.info("Parsing raw data.")
-        for file in os.listdir(self.raw_folder):
-            filepath = os.path.join(self.raw_folder, file)
-            with open(filepath, 'r') as in_f:
-                data = json.load(in_f)
-                parsed = parser.parse_data(data)
-                self._save_results(parsed, self.processed_folder)
-
-            # this is a hack to prevent oom
-            for table in parser._csv_file_results:
-                parser._csv_file_results[table].rows = []
-
-        result_mapping = parser.table_mapping.as_dict()
-        mapping = self.extract_table_details(result_mapping)
-
-        for subfolder in os.listdir(self.processed_folder):
-
-            columns = mapping.get(subfolder, {}).get("columns", [])
-            subfolder_path = os.path.join(self.processed_folder, subfolder)
-
-            if subfolder != out_table_name:
-                pk = mapping.get(subfolder, {}).get("primary_keys", [])
-            else:
-                pk = user_defined_pk
-
-            out_table = self.create_out_table_definition(name=subfolder, primary_key=pk, incremental=incremental)
-            logging.info(f"Processing table: {subfolder}, with primary keys: {pk}")
-            with ElasticDictWriter(out_table.full_path, columns) as wr:
-                wr.writeheader()
-                for file in os.listdir(subfolder_path):
-                    path = os.path.join(subfolder_path, file)
-                    with open(path, 'r') as f:
-                        rows = json.load(f)
-                    wr.writerows(rows)
-
-            self.write_manifest(out_table)
-
-        return result_mapping
-
-    def cleanup(self):
-        shutil.rmtree(self.temp_folder)
+    def cleanup(self, temp_folder: str):
+        shutil.rmtree(temp_folder)
 
     def get_client(self, params: dict) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
@@ -268,12 +220,10 @@ class Component(ComponentBase):
         return output
 
     @staticmethod
-    def _initialize_parser(table_name: str, mapping: dict = None) -> Parser:
-        if not mapping:
-            return Parser(main_table_name=table_name, analyze_further=True)
-        else:
-            table_mapping = TableMapping.build_from_mapping_dict(mapping)
-            return Parser(table_name, table_mapping=table_mapping)
+    def _save_results(results: list, destination: str) -> None:
+        full_path = os.path.join(destination, f"{uuid.uuid4()}.json")
+        with open(full_path, "w") as json_file:
+            json.dump(results, json_file, indent=4)
 
 
 """

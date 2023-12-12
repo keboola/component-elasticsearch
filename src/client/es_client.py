@@ -1,7 +1,7 @@
-import uuid
+import collections
 import json
-import os
 import typing as t
+from typing import Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
@@ -29,36 +29,30 @@ class ElasticsearchClient(Elasticsearch):
 
         super().__init__(**options)
 
-    def extract_data(self, index_name: str, query: str, destination: str) -> None:
+    def extract_data(self, index_name: str, query: str) -> Iterable:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
             query (dict): Elasticsearch DSL query.
-            destination (str): Path to store the results to.
 
-        Returns:
+        Yields:
             dict
         """
-
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
-        os.makedirs(destination, exist_ok=True)
-        self._process_response(response, destination)
+        for r in self._process_response(response):
+            yield r
 
         while len(response['hits']['hits']):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
-            self._process_response(response, destination)
+            for r in self._process_response(response):
+                yield r
 
-    def _process_response(self, response: dict, destination: str) -> None:
+    def _process_response(self, response: dict) -> Iterable:
         results = [hit["_source"] for hit in response['hits']['hits']]
-        self._save_results(results, destination)
-
-    @staticmethod
-    def _save_results(results: list, destination: str) -> None:
-        full_path = os.path.join(destination, f"{uuid.uuid4()}.json")
-        with open(full_path, "w") as json_file:
-            json.dump(results, json_file, indent=4)
+        for result in results:
+            yield self.flatten_json(result)
 
     def ping(
         self,
@@ -94,3 +88,18 @@ class ElasticsearchClient(Elasticsearch):
             return True
         except (ApiError, TransportError) as e:
             raise ElasticsearchClientException(e)
+
+    def flatten_json(self, x, out=None, name=''):
+        if out is None:
+            out = dict()
+        if type(x) is dict:
+            for a in x:
+                self.flatten_json(x[a], out, name + a + '.')
+
+        elif type(x) is list:
+            out[name[:-1]] = json.dumps(x)
+
+        else:
+            out[name[:-1]] = x
+
+        return out
