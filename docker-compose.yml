@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 services:
   # for development purposes
   dev:
@@ -8,7 +8,11 @@ services:
         - ./data:/data
     environment:
       - KBC_DATADIR=./data
-    mem_limit: 1024m
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
   test:
     # Use to run flake8 and unittests checks
     build: .
@@ -20,3 +24,21 @@ services:
     command:
       - /bin/sh
       - /code/scripts/build_n_test.sh
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=root
+      - xpack.security.http.ssl.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "--user", "elastic:root", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

@@ -2,7 +2,7 @@
   "parameters": {
     "index_name": "myindex",
     "primary_keys": ["id"],
-    "query": "{\"_source\": [\"id\",\"state.id\",\"state.text\",\"user.id\",\"user.gender\",\"user.email\",\"address.zip\",\"price.total_price\",\"price.total_price_cz\", \"price.payment_price\",\"price.shipment_price\",\"price.total_deal_price\",\"price.total_deal_purchase_price\",\"price.total_deal_sale_price\",\"price.total_deal_sale\",\"payment_type.id\",\"payment_type.name\",\"credit\",\"credit_payment\",\"shipment.id\",\"shipment.total_price\",\"shipment.shipment_sid\",\"shipment.shipment_name\",\"shipment.branch_id\",\"shipment.branch_name\",\"address.name\",\"address.surname\",\"address.street\",\"address.number\", \"address.city\", \"address.zip\",\"currency\",\"description\",\"is_test\", \"source\", \"created_at\", \"updated_at\",\"ordered_at\", \"done_at\",\"payed\"], \"query\": {\"range\": {\"updated_at\": {\"gte\": \"now-30d/d\",\"lte\": \"now/d\" }}}}",
+    "query": "",
     "date": {
       "shift": "yesterday",
       "format": "%Y-%m-%d",

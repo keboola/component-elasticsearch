@@ -102,7 +102,8 @@ class Component(ComponentBase):
         client = LegacyClient()
         client.run()
 
-    def cleanup(self, temp_folder: str):
+    @staticmethod
+    def cleanup(temp_folder: str):
         shutil.rmtree(temp_folder)
 
     def get_client(self, params: dict) -> ElasticsearchClient:
