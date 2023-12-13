@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 class CustomDatadirTest(TestDataDir):
 
     def setUp(self):
-        host = "host.docker.internal"
+        host = "localhost"
         ELASTICSEARCH_HOSTS = [{'host': host, 'port': 9200, 'scheme': 'http'}]
         INDEX_NAME = 'myindex'
         NUM_RECORDS = 1
