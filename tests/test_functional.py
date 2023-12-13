@@ -4,6 +4,7 @@ from freezegun import freeze_time
 from elasticsearch import Elasticsearch
 from faker import Faker
 import time
+import os
 
 try:
     from component import Component
@@ -14,7 +15,8 @@ except ModuleNotFoundError:
 class CustomDatadirTest(TestDataDir):
 
     def setUp(self):
-        host = "localhost"
+        host = os.getenv("DOCKER_HOST", "host.docker.internal")
+        print(f"Using docker host: {host} for test.")
         ELASTICSEARCH_HOSTS = [{'host': host, 'port': 9200, 'scheme': 'http'}]
         INDEX_NAME = 'myindex'
         NUM_RECORDS = 1
