@@ -201,25 +201,6 @@ class Component(ComponentBase):
                                 "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
         return tz
 
-    def extract_table_details(self, data, parent_prefix='', output=None):
-        if output is None:
-            output = {}
-
-        current_table_name = parent_prefix + data["table_name"]
-
-        # Store columns and primary keys for the current table
-        output[current_table_name] = {
-            "columns": list(data["column_mappings"].values()),
-            "primary_keys": data["primary_keys"]
-        }
-
-        # If there are child tables, extract details recursively for each child table
-        for child_name, child_data in data["child_tables"].items():
-            child_output = self.extract_table_details(child_data, current_table_name + "_")
-            output.update(child_output)
-
-        return output
-
     @staticmethod
     def _save_results(results: list, destination: str) -> None:
         full_path = os.path.join(destination, f"{uuid.uuid4()}.json")
