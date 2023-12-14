@@ -9,7 +9,7 @@ pipelines:
         caches:
           - docker
         script:
-          - export APP_IMAGE=keboola-component
+          - export APP_IMAGE=$APP_IMAGE
           - export TAG=${BITBUCKET_BRANCH//\//-}
           - docker build . --tag=$APP_IMAGE
           - docker images
@@ -31,7 +31,7 @@ pipelines:
           caches:
             - docker
           script:
-            - export APP_IMAGE=keboola-component
+            - export APP_IMAGE=$APP_IMAGE
             - export TAG=${BITBUCKET_BRANCH//\//-}
             - docker build . --tag=$APP_IMAGE
             - docker images
@@ -52,7 +52,7 @@ pipelines:
       - step:
           deployment: production
           script:
-            - export APP_IMAGE=keboola-component
+            - export APP_IMAGE=$APP_IMAGE
             - docker build . --tag=$APP_IMAGE
             - docker images
             - docker run $APP_IMAGE flake8 /code/ --config=/code/flake8.cfg
