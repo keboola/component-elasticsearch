@@ -1,3 +1,5 @@
+image: docker/compose:debian-1.29.2
+
 options:
   docker: true
 
@@ -13,8 +15,9 @@ pipelines:
           - docker images
           - docker -v
           - docker run $APP_IMAGE flake8 /code/ --config=/code/flake8.cfg
-          - echo "Running unit-tests..."
-          - docker run $APP_IMAGE python -m unittest discover
+          # run tests
+          - echo "Running tests..."
+          - docker-compose run test
           # push test image to ecr - uncomment for testing before deployment
           - echo "Pushing test image to repo. [tag=${TAG}]"
           - export REPOSITORY=`docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-repository $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP`

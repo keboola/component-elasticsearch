@@ -27,8 +27,6 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4

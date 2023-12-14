@@ -48,7 +48,6 @@ class ElasticSearchDataInserter:
             hosts=hosts,
             http_auth=(username, password)
         )
-        # self.verify_connection()
         self.index_name = index_name
         self.fake = Faker()
         Faker.seed(0)
