@@ -1,5 +1,3 @@
-image: docker/compose:debian-1.29.2
-
 options:
   docker: true
 
@@ -9,21 +7,21 @@ pipelines:
         caches:
           - docker
         script:
-          - export APP_IMAGE=$APP_IMAGE
-          - export TAG=${BITBUCKET_BRANCH//\//-}
+          - export APP_IMAGE=keboola-component
           - docker build . --tag=$APP_IMAGE
           - docker images
           - docker -v
           - docker run $APP_IMAGE flake8 /code/ --config=/code/flake8.cfg
-          # run tests
-          - echo "Running tests..."
-          - docker-compose run test
+          - echo "Running unit-tests..."
+          - docker run $APP_IMAGE python -m unittest discover
           # push test image to ecr - uncomment for testing before deployment
-          - echo "Pushing test image to repo. [tag=${TAG}]"
+          - export TEST_TAG=${BITBUCKET_BRANCH//\//-}
+          - echo "Pushing test image to repo. [tag=${TEST_TAG}]"
           - export REPOSITORY=`docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-repository $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP`
-          - docker tag $APP_IMAGE:latest $REPOSITORY:$TAG
+          - docker tag $APP_IMAGE:latest $REPOSITORY:$TEST_TAG
           - eval $(docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-login $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP)
-          - docker push $REPOSITORY:$TAG
+          - docker push $REPOSITORY:$TEST_TAG
+
 
   branches:
     master:
@@ -31,20 +29,19 @@ pipelines:
           caches:
             - docker
           script:
-            - export APP_IMAGE=$APP_IMAGE
-            - export TAG=${BITBUCKET_BRANCH//\//-}
+            - export APP_IMAGE=keboola-component
             - docker build . --tag=$APP_IMAGE
             - docker images
             - docker -v
             - docker run $APP_IMAGE flake8 /code/ --config=/code/flake8.cfg
             - echo "Running unit-tests..."
             - docker run $APP_IMAGE python -m unittest discover
-            # push test image to ecr - uncomment for testing before deploymen
-            - echo "Pushing test image to repo. [tag=${TAG}]"
+            # push test image to ecr - uncomment for testing before deployment
+            - echo 'Pushing test image to repo. [tag=test]'
             - export REPOSITORY=`docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-repository $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP`
-            - docker tag $APP_IMAGE:latest $REPOSITORY:$TAG
+            - docker tag $APP_IMAGE:latest $REPOSITORY:test
             - eval $(docker run --rm -e KBC_DEVELOPERPORTAL_USERNAME -e KBC_DEVELOPERPORTAL_PASSWORD -e KBC_DEVELOPERPORTAL_URL quay.io/keboola/developer-portal-cli-v2:latest ecr:get-login $KBC_DEVELOPERPORTAL_VENDOR $KBC_DEVELOPERPORTAL_APP)
-            - docker push $REPOSITORY:$TAG
+            - docker push $REPOSITORY:test
             - chmod +x ./scripts/update_dev_portal_properties.sh
             - ./scripts/update_dev_portal_properties.sh
   tags:
@@ -52,7 +49,7 @@ pipelines:
       - step:
           deployment: production
           script:
-            - export APP_IMAGE=$APP_IMAGE
+            - export APP_IMAGE=keboola-component
             - docker build . --tag=$APP_IMAGE
             - docker images
             - docker run $APP_IMAGE flake8 /code/ --config=/code/flake8.cfg
