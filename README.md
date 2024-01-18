@@ -46,6 +46,7 @@ Elasticsearch extractor currently supports following authentication methods:
 - **API key**
 - **SSH + No auth (LEGACY)** - This authentication option is still supported, although not recommended.
 
+**note: ** You also have to specify scheme elasticsearch parameter, which can be either http or https.
 
 ### SSH (`ssh`) settings (LEGACY OPTION)
 
