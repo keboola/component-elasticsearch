@@ -114,7 +114,7 @@ class Component(ComponentBase):
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
-        scheme = db_params.get(KEY_SCHEME, "http")
+        scheme = params.get(KEY_SCHEME, "http")
 
         auth_type = auth_params.get(KEY_AUTH_TYPE, False)
         if auth_type not in ["basic", "api_key", "bearer", "no_auth"]:
