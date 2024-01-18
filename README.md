@@ -20,7 +20,7 @@ In Keboola, the component is set up as a row-based component and thus certain pa
 
 ### Database (`db`) settings
 
-The database host and port need to be provided to correctly connect to the engine and download index data.
+The database host and port needs to be provided to correctly connect to the engine and download index data.
 
 Required parameters are:
 
@@ -31,12 +31,10 @@ The correct JSON specification of the database settings then takes the following
 
 ```json
 {
-  ...
   "db": {
       "hostname": "127.0.0.1",
       "port": 8080
     }
-  ...
 }
 ```
 
