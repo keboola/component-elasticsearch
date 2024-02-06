@@ -1,7 +1,14 @@
-https://bitbucket.org/kds_consulting_team/keboola-python-util-lib/get/0.5.0.zip#egg=kbc
-paramiko==2.7.2
-dateparser
-cryptography==36.0.2
-furl
+keboola.component==1.4.3
 keboola.csvwriter
+keboola.json-to-csv
+elasticsearch==8.10.1
+dateparser
+paramiko==2.8.0
 retry
+furl
+mock
+freezegun
+https://bitbucket.org/kds_consulting_team/datadirtest/get/1.5.1.zip#egg=datadirtest
+pytest
+faker
+cryptography==36.0.2 # to supress Blowfish warnings from Paramiko

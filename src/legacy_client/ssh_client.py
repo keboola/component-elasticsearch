@@ -95,7 +95,7 @@ class SshClient:
 
         return pkey
 
-    def build_curl(self, url, request_type, headers=[], json_body=None):
+    def build_curl(self, url, request_type, headers=None, json_body=None):
 
         # Start of curl string
         curl = 'curl -i'
