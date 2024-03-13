@@ -46,14 +46,6 @@ KEY_LEGACY_SSH = 'ssh'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
-DEFAULT_QUERY = """
-        query = {
-            "query": {
-                "match_all": {}
-            }
-        }
-        """
-
 
 class Component(ComponentBase):
 
