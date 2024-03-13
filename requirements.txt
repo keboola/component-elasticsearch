@@ -12,4 +12,3 @@ https://bitbucket.org/kds_consulting_team/datadirtest/get/1.5.1.zip#egg=datadirt
 pytest
 faker
 cryptography==36.0.2 # to supress Blowfish warnings from Paramiko
-backoff==2.2.1

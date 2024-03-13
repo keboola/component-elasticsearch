@@ -5,7 +5,6 @@ from typing import Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
-from elastic_transport import ConnectionTimeout, ConnectionError
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
@@ -30,7 +29,6 @@ class ElasticsearchClient(Elasticsearch):
 
         super().__init__(**options)
 
-    @backoff.on_exception(backoff.expo, (ApiError, ConnectionTimeout, ConnectionError), max_tries=5)
     def extract_data(self, index_name: str, query: str) -> Iterable:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
