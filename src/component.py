@@ -12,7 +12,7 @@ from keboola.csvwriter import ElasticDictWriter
 
 from client.es_client import ElasticsearchClient
 from legacy_client.legacy_es_client import LegacyClient
-
+from elasticsearch.exceptions import ApiError
 
 # configuration variables
 KEY_GROUP_DB = 'db'
@@ -86,10 +86,13 @@ class Component(ComponentBase):
             out_table = self.create_out_table_definition(out_table_name, primary_key=user_defined_pk,
                                                          incremental=incremental)
 
-            with ElasticDictWriter(out_table.full_path, columns) as wr:
-                for result in client.extract_data(index_name, query):
-                    wr.writerow(result)
-                wr.writeheader()
+            try:
+                with ElasticDictWriter(out_table.full_path, columns) as wr:
+                    for result in client.extract_data(index_name, query):
+                        wr.writerow(result)
+                    wr.writeheader()
+            except ApiError as e:
+                raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
 
             self.write_manifest(out_table)
 
