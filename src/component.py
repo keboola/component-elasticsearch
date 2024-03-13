@@ -56,7 +56,7 @@ class Component(ComponentBase):
         self.validate_configuration_parameters(REQUIRED_PARAMETERS)
         params = self.configuration.parameters
 
-        logging.info(f"Running test version of the component)")
+        logging.info("Running test version of the component)")
 
         if params.get(KEY_LEGACY_SSH):
             self.run_legacy_client()
