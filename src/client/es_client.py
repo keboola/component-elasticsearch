@@ -4,7 +4,8 @@ import typing as t
 from typing import Iterable
 
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import ApiError, TransportError
+from elasticsearch.exceptions import ApiError
+from elastic_transport import TransportError
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
