@@ -29,7 +29,7 @@ class ElasticsearchClient(Elasticsearch):
 
         super().__init__(**options)
 
-    @backoff.on_exception(backoff.expo, ApiError, max_tries=5)
+    @backoff.on_exception(backoff.expo, (ApiError, TransportError), max_tries=5)
     def extract_data(self, index_name: str, query: str) -> Iterable:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
