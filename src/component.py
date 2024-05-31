@@ -12,6 +12,8 @@ from keboola.csvwriter import ElasticDictWriter
 
 from client.es_client import ElasticsearchClient
 from legacy_client.legacy_es_client import LegacyClient
+from client.ssh_utils import get_private_key, SomeSSHException
+from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 # configuration variables
 KEY_GROUP_DB = 'db'
@@ -41,6 +43,16 @@ DEFAULT_DATE = 'yesterday'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
+KEY_USE_SSH = "use_ssh"
+KEY_SSH = "ssh_params"
+KEY_SSH_PRIVATE_KEY = "#private_key"
+KEY_SSH_PRIVATE_KEY_PASSWORD = "#private_key_password"
+KEY_SSH_USERNAME = "username"
+KEY_SSH_TUNNEL_HOST = "tunnel_host"
+
+LOCAL_BIND_ADDRESS = "127.0.0.1"
+LOCAL_BIND_PORT = 9200
+
 KEY_LEGACY_SSH = 'ssh'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
@@ -68,6 +80,10 @@ class Component(ComponentBase):
 
             index_name, query = self.parse_index_parameters(params)
             statefile = self.get_state_file()
+
+            if params.get(KEY_USE_SSH):
+                self._create_and_start_ssh_tunnel(params)
+
             client = self.get_client(params)
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
@@ -84,9 +100,11 @@ class Component(ComponentBase):
                     wr.writeheader()
             except Exception as e:
                 raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
+            finally:
+                if hasattr(self, 'ssh_tunnel') and self.ssh_tunnel.is_active:
+                    self.ssh_tunnel.stop()
 
             self.write_manifest(out_table)
-
             statefile[out_table_name] = wr.fieldnames
             self.write_state_file(statefile)
             self.cleanup(temp_folder)
@@ -127,13 +145,16 @@ class Component(ComponentBase):
 
             auth = (username, password)
             client = ElasticsearchClient([setup], scheme, http_auth=auth)
+
         elif auth_type == "api_key":
             api_key_id = auth_params.get(KEY_API_KEY_ID)
             api_key = auth_params.get(KEY_API_KEY)
             api_key = (api_key_id, api_key)
             client = ElasticsearchClient([setup], scheme, api_key=api_key)
+
         elif auth_type == "no_auth":
             client = ElasticsearchClient([setup], scheme)
+
         else:
             raise UserException(f"Unsupported auth_type: {auth_type}")
 
@@ -200,6 +221,45 @@ class Component(ComponentBase):
         full_path = os.path.join(destination, f"{uuid.uuid4()}.json")
         with open(full_path, "w") as json_file:
             json.dump(results, json_file, indent=4)
+
+    def _create_and_start_ssh_tunnel(self, params) -> None:
+        ssh_params = params.get(KEY_SSH)
+        ssh_username = ssh_params.get(KEY_SSH_USERNAME)
+        private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
+        private_key_pw = ssh_params.get(KEY_SSH_PRIVATE_KEY_PASSWORD)
+        ssh_tunnel_host = ssh_params.get(KEY_SSH_TUNNEL_HOST)
+        db_hostname = params.get(KEY_DB_HOSTNAME)
+        db_port = params.get(KEY_DB_PORT)
+        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname, db_port)
+
+        try:
+            self.ssh_server.start()
+        except BaseSSHTunnelForwarderError as e:
+            raise UserException(
+                "Failed to establish SSH connection. Recheck all SSH configuration parameters") from e
+
+        logging.info("SSH tunnel is enabled.")
+
+    def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname,
+                           db_port) -> None:
+
+        try:
+            private_key = get_private_key(private_key, private_key_pw)
+        except SomeSSHException as e:
+            raise UserException from e
+
+        try:
+            db_port = int(db_port)
+        except ValueError as e:
+            raise UserException("Remote port must be a valid integer") from e
+
+        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=ssh_tunnel_host,
+                                             ssh_pkey=private_key,
+                                             ssh_username=ssh_username,
+                                             remote_bind_address=(db_hostname, db_port),
+                                             local_bind_address=(LOCAL_BIND_ADDRESS, LOCAL_BIND_PORT),
+                                             ssh_config_file=None,
+                                             allow_agent=False)
 
 
 """
