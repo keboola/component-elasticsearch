@@ -159,9 +159,11 @@ class Component(ComponentBase):
             raise UserException(f"Unsupported auth_type: {auth_type}")
 
         try:
-            client.ping(error_trace=True)
+            p = client.ping(error_trace=True)
+            if not p:
+                raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed.")
         except Exception as e:
-            raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed. {e}")
+            raise UserException(f"Connection to Elasticsearch instance {db_hostname}:{db_port} failed. {str(e)}")
 
         return client
 
