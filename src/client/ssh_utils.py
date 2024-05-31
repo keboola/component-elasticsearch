@@ -25,6 +25,7 @@ def _get_decoded_key(input_key):
     """
         Have to satisfy both encoded and not encoded keys
     """
+    b64_decoded_input_key = ""
     with contextlib.suppress(binascii.Error):
         b64_decoded_input_key = base64.b64decode(input_key, validate=True).decode('utf-8')
 

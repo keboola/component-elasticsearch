@@ -250,7 +250,7 @@ class Component(ComponentBase):
         try:
             private_key = get_private_key(private_key, private_key_pw)
         except SomeSSHException as e:
-            raise UserException from e
+            raise UserException(e) from e
 
         try:
             db_port = int(db_port)
