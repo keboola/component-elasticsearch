@@ -12,7 +12,7 @@ from keboola.csvwriter import ElasticDictWriter
 
 from client.es_client import ElasticsearchClient
 from legacy_client.legacy_es_client import LegacyClient
-from client.ssh_utils import get_private_key, SomeSSHException
+from client.ssh_utils import SomeSSHException, get_private_key
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 # configuration variables
@@ -232,8 +232,9 @@ class Component(ComponentBase):
         private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
         private_key_pw = ssh_params.get(KEY_SSH_PRIVATE_KEY_PASSWORD)
         ssh_tunnel_host = ssh_params.get(KEY_SSH_TUNNEL_HOST)
-        db_hostname = params.get(KEY_DB_HOSTNAME)
-        db_port = params.get(KEY_DB_PORT)
+        db_params = params.get(KEY_GROUP_DB)
+        db_hostname = db_params.get(KEY_DB_HOSTNAME)
+        db_port = db_params.get(KEY_DB_PORT)
         self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname, db_port)
 
         try:
@@ -247,6 +248,10 @@ class Component(ComponentBase):
     def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname,
                            db_port) -> None:
 
+        if not private_key.startswith("-----BEGIN RSA PRIVATE KEY-----"):
+            raise UserException("Invalid private key format. Please provide a valid RSA private key, starting with: "
+                                "-----BEGIN RSA PRIVATE KEY-----")
+
         try:
             private_key = get_private_key(private_key, private_key_pw)
         except SomeSSHException as e:
@@ -258,11 +263,11 @@ class Component(ComponentBase):
             raise UserException("Remote port must be a valid integer") from e
 
         self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=ssh_tunnel_host,
-                                             ssh_pkey=private_key,
                                              ssh_username=ssh_username,
+                                             ssh_pkey=private_key,
+                                             ssh_private_key_password=private_key_pw,
                                              remote_bind_address=(db_hostname, db_port),
                                              local_bind_address=(LOCAL_BIND_ADDRESS, LOCAL_BIND_PORT),
-                                             ssh_config_file=None,
                                              allow_agent=False)
 
 

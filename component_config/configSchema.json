@@ -130,7 +130,7 @@
           },
           "#private_key": {
             "propertyOrder": 20,
-            "title": "Private key",
+            "title": "RSA Private key",
             "type": "string",
             "format": "textarea",
             "options": {
