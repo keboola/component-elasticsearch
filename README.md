@@ -24,7 +24,7 @@ The database host and port needs to be provided to correctly connect to the engi
 
 Required parameters are:
 
-- **Hostname** (`db.hostname`) - specifies the IP address or URL at which the database is located;
+- **Hostname** (`db.hostname`) - specifies the IP address or URL at which the database is located. NOTE: If you are using ssh tunnel with automatic port forwarding, you can use `localhost` as the hostname.
 - **Port** (`db.port`) - specifies the accompanying port to the hostname.
 
 The correct JSON specification of the database settings then takes the following form.
@@ -32,7 +32,7 @@ The correct JSON specification of the database settings then takes the following
 ```json
 {
   "db": {
-      "hostname": "127.0.0.1",
+      "hostname": "localhost",
       "port": 8080
     }
 }
@@ -44,20 +44,20 @@ Elasticsearch extractor currently supports following authentication methods:
 - **No auth**
 - **Basic** - Username + password combination
 - **API key**
-- **SSH + No auth (LEGACY)** - This authentication option is still supported, although not recommended.
+- **SSH + Any method mentioned above** - You can use connection over shh tunnel and any of the above-mentioned methods.
 
 **note: ** You also have to specify scheme elasticsearch parameter, which can be either http or https.
 
-### SSH (`ssh`) settings (LEGACY OPTION)
+### SSH (`ssh`) settings
 
 Connection to the Elasticsearch instance via an SSH server is still supported by the extractor
 
 Required parameters for SSH section of the configuration are:
 
-- **SSH Hostname** (`ssh.hostname`) - a SSH host, to which a connection shall be made;
+- **SSH Hostname** (`ssh.hostname`) - a SSH host, to which a connection shall be made. 
 - **SSH Port** (`ssh.port`) - an accompanying SSH port to `ssh.hostname`;
 - **SSH Username** (`ssh.username`) - a user, which will be used for SSH authentication;
-- **SSH Private Key** (`ssh.#private_key`) - an SSH private key.
+- **SSH Private Key** (`ssh.#private_key`) - an SSH private key in RSA format.
 
 The final SSH configuration should then look like the one below.
 
@@ -68,7 +68,7 @@ The final SSH configuration should then look like the one below.
       "hostname": "ssh-host-url.cz",
       "port": 22,
       "username": "user-ssh",
-      "#private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END OPENSSH PRIVATE KEY-----"
+      "#private_key": "-----BEGIN RSA PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END RSA PRIVATE KEY-----"
     }
   ...
 }
@@ -91,7 +91,7 @@ In `request_body`, users are able to specify their custom JSON request body, whi
 
 It's also possible to specify `size` and `scroll` parameters, to control size of the returned page and length of its availability. If `size` or `scroll` are not specified, default values are used for either of the parameters.
 
-An example of sepcifying a request body may be shown by using the `_source` parameter to only extract requested fields. The request body would then take the following form:
+An example of specifying a request body may be shown by using the `_source` parameter to only extract requested fields. The request body would then take the following form:
 
 ```json
 {

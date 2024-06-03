@@ -49,6 +49,7 @@ KEY_SSH_PRIVATE_KEY = "#private_key"
 KEY_SSH_PRIVATE_KEY_PASSWORD = "#private_key_password"
 KEY_SSH_USERNAME = "username"
 KEY_SSH_TUNNEL_HOST = "tunnel_host"
+KEY_SSH_TUNNEL_PORT = "tunnel_port"
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
 LOCAL_BIND_PORT = 9200
@@ -232,10 +233,11 @@ class Component(ComponentBase):
         private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
         private_key_pw = ssh_params.get(KEY_SSH_PRIVATE_KEY_PASSWORD)
         ssh_tunnel_host = ssh_params.get(KEY_SSH_TUNNEL_HOST)
+        ssh_tunnel_port = ssh_params.get(KEY_SSH_TUNNEL_PORT, 22)
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
-        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname, db_port)
+        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port, db_hostname, db_port)
 
         try:
             self.ssh_server.start()
@@ -245,8 +247,8 @@ class Component(ComponentBase):
 
         logging.info("SSH tunnel is enabled.")
 
-    def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, db_hostname,
-                           db_port) -> None:
+    def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port,
+                           db_hostname, db_port) -> None:
 
         if not private_key.startswith("-----BEGIN RSA PRIVATE KEY-----"):
             raise UserException("Invalid private key format. Please provide a valid RSA private key, starting with: "
@@ -262,7 +264,7 @@ class Component(ComponentBase):
         except ValueError as e:
             raise UserException("Remote port must be a valid integer") from e
 
-        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=ssh_tunnel_host,
+        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=(ssh_tunnel_host, ssh_tunnel_port),
                                              ssh_username=ssh_username,
                                              ssh_pkey=private_key,
                                              ssh_private_key_password=private_key_pw,
