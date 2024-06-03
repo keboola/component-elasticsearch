@@ -237,7 +237,8 @@ class Component(ComponentBase):
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
-        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port, db_hostname, db_port)
+        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port,
+                                db_hostname, db_port)
 
         try:
             self.ssh_server.start()
