@@ -43,13 +43,13 @@ DEFAULT_DATE = 'yesterday'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_TZ = 'UTC'
 
-KEY_USE_SSH = "use_ssh"
-KEY_SSH = "ssh_params"
-KEY_SSH_PRIVATE_KEY = "#private_key"
-KEY_SSH_PRIVATE_KEY_PASSWORD = "#private_key_password"
-KEY_SSH_USERNAME = "username"
-KEY_SSH_TUNNEL_HOST = "tunnel_host"
-KEY_SSH_TUNNEL_PORT = "tunnel_port"
+KEY_SSH = "ssh_options"
+KEY_USE_SSH = "enabled"
+KEY_SSH_KEYS = "keys"
+KEY_SSH_PRIVATE_KEY = "#private"
+KEY_SSH_USERNAME = "user"
+KEY_SSH_TUNNEL_HOST = "sshHost"
+KEY_SSH_TUNNEL_PORT = "sshPort"
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
 LOCAL_BIND_PORT = 9200
@@ -57,8 +57,6 @@ LOCAL_BIND_PORT = 9200
 KEY_LEGACY_SSH = 'ssh'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
-
-PRIVATE_KEY_FORMAT = '"-----BEGIN RSA PRIVATE KEY-----"'
 
 
 class Component(ComponentBase):
@@ -84,7 +82,7 @@ class Component(ComponentBase):
             index_name, query = self.parse_index_parameters(params)
             statefile = self.get_state_file()
 
-            if params.get(KEY_USE_SSH):
+            if params.get(KEY_SSH, {}).get(KEY_USE_SSH, False):
                 self._create_and_start_ssh_tunnel(params)
 
             client = self.get_client(params)
@@ -232,14 +230,14 @@ class Component(ComponentBase):
     def _create_and_start_ssh_tunnel(self, params) -> None:
         ssh_params = params.get(KEY_SSH)
         ssh_username = ssh_params.get(KEY_SSH_USERNAME)
-        private_key = ssh_params.get(KEY_SSH_PRIVATE_KEY)
-        private_key_pw = ssh_params.get(KEY_SSH_PRIVATE_KEY_PASSWORD)
+        keys = ssh_params.get(KEY_SSH_KEYS)
+        private_key = keys.get(KEY_SSH_PRIVATE_KEY)
         ssh_tunnel_host = ssh_params.get(KEY_SSH_TUNNEL_HOST)
         ssh_tunnel_port = ssh_params.get(KEY_SSH_TUNNEL_PORT, 22)
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
-        self._create_ssh_tunnel(ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port,
+        self._create_ssh_tunnel(ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
                                 db_hostname, db_port)
 
         try:
@@ -250,15 +248,11 @@ class Component(ComponentBase):
 
         logging.info("SSH tunnel is enabled.")
 
-    def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port,
+    def _create_ssh_tunnel(self, ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
                            db_hostname, db_port) -> None:
 
-        if not private_key.startswith(PRIVATE_KEY_FORMAT):
-            raise UserException(f"Invalid private key format. Please provide a valid RSA private key, starting with: "
-                                f"{PRIVATE_KEY_FORMAT}")
-
         try:
-            private_key = get_private_key(private_key, private_key_pw)
+            private_key = get_private_key(private_key, None)
         except SomeSSHException as e:
             raise UserException(e) from e
 
@@ -267,12 +261,13 @@ class Component(ComponentBase):
         except ValueError as e:
             raise UserException("Remote port must be a valid integer") from e
 
-        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=(ssh_tunnel_host, ssh_tunnel_port),
-                                             ssh_username=ssh_username,
+        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=ssh_tunnel_host,
+                                             ssh_port=ssh_tunnel_port,
                                              ssh_pkey=private_key,
-                                             ssh_private_key_password=private_key_pw,
+                                             ssh_username=ssh_username,
                                              remote_bind_address=(db_hostname, db_port),
                                              local_bind_address=(LOCAL_BIND_ADDRESS, LOCAL_BIND_PORT),
+                                             ssh_config_file=None,
                                              allow_agent=False)
 
 

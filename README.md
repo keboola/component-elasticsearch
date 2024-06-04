@@ -54,24 +54,24 @@ Connection to the Elasticsearch instance via an SSH server is still supported by
 
 Required parameters for SSH section of the configuration are:
 
-- **SSH Hostname** (`ssh.hostname`) - SSH host, to which a connection shall be made. 
-- **SSH Port** (`ssh.port`) - SSH port
-- **SSH Username** (`ssh.username`) - A user, which will be used for SSH authentication.
-- **SSH Private Key** (`ssh.#private_key`) - An SSH private key in RSA format.
+- **SSH Hostname** - SSH host, to which a connection shall be made. 
+- **SSH Port**
+- **SSH Username**  - A user, which will be used for SSH authentication.
+- **SSH Private Key** - An SSH private key in RSA format.
 
 The final SSH configuration should then look like the one below.
 
 ```json
-{
-  ...
-  "ssh": {
-      "hostname": "ssh-host-url.cz",
-      "port": 22,
-      "username": "user-ssh",
-      "#private_key": "-----BEGIN RSA PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END RSA PRIVATE KEY-----"
-    }
-  ...
-}
+  "ssh_options": {
+    "enabled": true,
+    "keys": {
+      "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCn4a...== dominik_novotny@keboola.com",
+      "#private": "-----BEGIN OPENSSH PRIVATE KEY-----\nxxxxxxxx\n-----END OPENSSH PRIVATE KEY-----"
+    },
+        "sshHost": "66.66.66.142",
+        "user": "dominik_novotny_keboola_com",
+        "sshPort": 22
+  }
 ```
 
 *Note:* If you're using a predefined JSON configuration schema, the new lines in SSH private key will be automatically replaced by `\n`. However, if you're using the raw JSON to configure the component, you need to escape all new lines by `\n`, in order to inject the private key into the configuration properly.

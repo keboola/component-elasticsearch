@@ -103,62 +103,10 @@
       "default": "http",
       "propertyOrder": 4
     },
-          "use_ssh": {
-        "propertyOrder": 70,
-        "title": "Use ssh",
-        "type": "boolean",
-        "description": "If checked, an SSH tunnel will be used to call the API",
-        "format": "checkbox",
-        "default": false
-      },
-      "ssh_params": {
-        "options": {
-          "dependencies": {
-            "use_ssh": true
-          }
-        },
-        "propertyOrder": 80,
-        "title": "SSH Tunnel configuration",
-        "type": "object",
-        "description": "",
-        "properties": {
-          "username": {
-            "propertyOrder": 10,
-            "title": "Username",
-            "description": "The SSH User for connecting to your SSH server",
-            "type": "string"
-          },
-          "#private_key": {
-            "propertyOrder": 20,
-            "title": "RSA Private key",
-            "type": "string",
-            "format": "textarea",
-            "options": {
-              "input_height": "150px"
-            },
-            "description": "The base64-encoded private key for the key pair associated with your SSH server"
-          },
-          "#private_key_password": {
-            "propertyOrder": 25,
-            "title": "Private Key password",
-            "type": "string",
-            "format": "password",
-            "description": "The password for the provided private key"
-          },
-          "tunnel_host": {
-            "propertyOrder": 30,
-            "title": "Tunnel Host",
-            "type": "string",
-            "description": "The host name or host IP associated with your SSH server (Note: Don't use load balancer as host)"
-          },
-          "tunnel_port": {
-            "propertyOrder": 35,
-            "title": "Tunnel Port",
-            "type": "integer",
-            "default": 22,
-            "description": "The host name or host IP associated with your SSH server (Note: Don't use load balancer as host)"
-          }
+        "ssh_options": {
+          "type": "object",
+          "format": "ssh-editor",
+          "propertyOrder": 5
         }
-      }
   }
 }
