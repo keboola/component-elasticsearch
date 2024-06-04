@@ -58,6 +58,8 @@ KEY_LEGACY_SSH = 'ssh'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
+PRIVATE_KEY_FORMAT = '"-----BEGIN RSA PRIVATE KEY-----"'
+
 
 class Component(ComponentBase):
 
@@ -251,9 +253,9 @@ class Component(ComponentBase):
     def _create_ssh_tunnel(self, ssh_username, private_key, private_key_pw, ssh_tunnel_host, ssh_tunnel_port,
                            db_hostname, db_port) -> None:
 
-        if not private_key.startswith("-----BEGIN RSA PRIVATE KEY-----"):
-            raise UserException("Invalid private key format. Please provide a valid RSA private key, starting with: "
-                                "-----BEGIN RSA PRIVATE KEY-----")
+        if not private_key.startswith(PRIVATE_KEY_FORMAT):
+            raise UserException(f"Invalid private key format. Please provide a valid RSA private key, starting with: "
+                                "{PRIVATE_KEY_FORMAT}")
 
         try:
             private_key = get_private_key(private_key, private_key_pw)

@@ -54,10 +54,10 @@ Connection to the Elasticsearch instance via an SSH server is still supported by
 
 Required parameters for SSH section of the configuration are:
 
-- **SSH Hostname** (`ssh.hostname`) - a SSH host, to which a connection shall be made. 
-- **SSH Port** (`ssh.port`) - an accompanying SSH port to `ssh.hostname`;
-- **SSH Username** (`ssh.username`) - a user, which will be used for SSH authentication;
-- **SSH Private Key** (`ssh.#private_key`) - an SSH private key in RSA format.
+- **SSH Hostname** (`ssh.hostname`) - SSH host, to which a connection shall be made. 
+- **SSH Port** (`ssh.port`) - SSH port
+- **SSH Username** (`ssh.username`) - A user, which will be used for SSH authentication.
+- **SSH Private Key** (`ssh.#private_key`) - An SSH private key in RSA format.
 
 The final SSH configuration should then look like the one below.
 
@@ -124,9 +124,9 @@ The date placeholder will be automatically replaced based on the specification o
 
 Parameters:
 
-- **Date Shift** (`shift`) - a date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced;
-- **Date Format** (`format`) - the format of date, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
-- **Time Zone** (`time_zone`) - a time zone, at which the date replacement will be evaluated. Accepted format is any standard [DB timezone specification](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).
+- **Date Shift** (`shift`) - A date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced.
+- **Date Format** (`format`) - Date format, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
+- **Time Zone** (`time_zone`) - A time zone, at which the date replacement will be evaluated. Accepted format is any standard [DB timezone specification](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).
 
 
 ### Output Table Name (`storage_table`)
