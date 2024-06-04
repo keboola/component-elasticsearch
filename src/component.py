@@ -255,7 +255,7 @@ class Component(ComponentBase):
 
         if not private_key.startswith(PRIVATE_KEY_FORMAT):
             raise UserException(f"Invalid private key format. Please provide a valid RSA private key, starting with: "
-                                "{PRIVATE_KEY_FORMAT}")
+                                f"{PRIVATE_KEY_FORMAT}")
 
         try:
             private_key = get_private_key(private_key, private_key_pw)
