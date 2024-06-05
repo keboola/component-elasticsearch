@@ -102,6 +102,11 @@
       ],
       "default": "http",
       "propertyOrder": 4
-    }
+    },
+        "ssh_options": {
+          "type": "object",
+          "format": "ssh-editor",
+          "propertyOrder": 5
+        }
   }
 }

@@ -24,7 +24,7 @@ The database host and port needs to be provided to correctly connect to the engi
 
 Required parameters are:
 
-- **Hostname** (`db.hostname`) - specifies the IP address or URL at which the database is located;
+- **Hostname** (`db.hostname`) - specifies the IP address or URL at which the database is located. NOTE: If you are using ssh tunnel with automatic port forwarding, you can use `localhost` as the hostname.
 - **Port** (`db.port`) - specifies the accompanying port to the hostname.
 
 The correct JSON specification of the database settings then takes the following form.
@@ -32,7 +32,7 @@ The correct JSON specification of the database settings then takes the following
 ```json
 {
   "db": {
-      "hostname": "127.0.0.1",
+      "hostname": "localhost",
       "port": 8080
     }
 }
@@ -44,34 +44,34 @@ Elasticsearch extractor currently supports following authentication methods:
 - **No auth**
 - **Basic** - Username + password combination
 - **API key**
-- **SSH + No auth (LEGACY)** - This authentication option is still supported, although not recommended.
+- **SSH + Any method mentioned above** - You can use connection over shh tunnel and any of the above-mentioned methods.
 
 **note: ** You also have to specify scheme elasticsearch parameter, which can be either http or https.
 
-### SSH (`ssh`) settings (LEGACY OPTION)
+### SSH (`ssh`) settings
 
 Connection to the Elasticsearch instance via an SSH server is still supported by the extractor
 
 Required parameters for SSH section of the configuration are:
 
-- **SSH Hostname** (`ssh.hostname`) - a SSH host, to which a connection shall be made;
-- **SSH Port** (`ssh.port`) - an accompanying SSH port to `ssh.hostname`;
-- **SSH Username** (`ssh.username`) - a user, which will be used for SSH authentication;
-- **SSH Private Key** (`ssh.#private_key`) - an SSH private key.
+- **SSH Hostname** - SSH host, to which a connection shall be made. 
+- **SSH Port**
+- **SSH Username**  - A user, which will be used for SSH authentication.
+- **SSH Private Key** - An SSH private key in RSA format.
 
 The final SSH configuration should then look like the one below.
 
 ```json
-{
-  ...
-  "ssh": {
-      "hostname": "ssh-host-url.cz",
-      "port": 22,
-      "username": "user-ssh",
-      "#private_key": "-----BEGIN OPENSSH PRIVATE KEY-----\nENCRYPTED\nSSH\nKEY\n-----END OPENSSH PRIVATE KEY-----"
-    }
-  ...
-}
+  "ssh_options": {
+    "enabled": true,
+    "keys": {
+      "public": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCn4a...== dominik_novotny@keboola.com",
+      "#private": "-----BEGIN OPENSSH PRIVATE KEY-----\nxxxxxxxx\n-----END OPENSSH PRIVATE KEY-----"
+    },
+        "sshHost": "66.66.66.142",
+        "user": "dominik_novotny_keboola_com",
+        "sshPort": 22
+  }
 ```
 
 *Note:* If you're using a predefined JSON configuration schema, the new lines in SSH private key will be automatically replaced by `\n`. However, if you're using the raw JSON to configure the component, you need to escape all new lines by `\n`, in order to inject the private key into the configuration properly.
@@ -91,7 +91,7 @@ In `request_body`, users are able to specify their custom JSON request body, whi
 
 It's also possible to specify `size` and `scroll` parameters, to control size of the returned page and length of its availability. If `size` or `scroll` are not specified, default values are used for either of the parameters.
 
-An example of sepcifying a request body may be shown by using the `_source` parameter to only extract requested fields. The request body would then take the following form:
+An example of specifying a request body may be shown by using the `_source` parameter to only extract requested fields. The request body would then take the following form:
 
 ```json
 {
@@ -124,9 +124,9 @@ The date placeholder will be automatically replaced based on the specification o
 
 Parameters:
 
-- **Date Shift** (`shift`) - a date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced;
-- **Date Format** (`format`) - the format of date, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
-- **Time Zone** (`time_zone`) - a time zone, at which the date replacement will be evaluated. Accepted format is any standard [DB timezone specification](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).
+- **Date Shift** (`shift`) - A date in absolute (`YYYY-MM-DD`) format, or relative format (e.g. today, yesterday, 3 days ago, etc.), specifying by which date the placeholder will be replaced.
+- **Date Format** (`format`) - Date format, which will replace the date placeholder. Accepted formats are listed in [Python strftime documentation](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes).
+- **Time Zone** (`time_zone`) - A time zone, at which the date replacement will be evaluated. Accepted format is any standard [DB timezone specification](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).
 
 
 ### Output Table Name (`storage_table`)
