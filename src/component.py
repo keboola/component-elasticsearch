@@ -52,7 +52,6 @@ KEY_SSH_TUNNEL_HOST = "sshHost"
 KEY_SSH_TUNNEL_PORT = "sshPort"
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
-LOCAL_BIND_PORT = 9201
 
 KEY_LEGACY_SSH = 'ssh'
 
@@ -282,7 +281,7 @@ class Component(ComponentBase):
                                              ssh_pkey=private_key,
                                              ssh_username=ssh_username,
                                              remote_bind_address=(db_hostname, db_port),
-                                             local_bind_address=(LOCAL_BIND_ADDRESS, LOCAL_BIND_PORT),
+                                             local_bind_address=(LOCAL_BIND_ADDRESS, db_port),
                                              ssh_config_file=None,
                                              allow_agent=False)
 
