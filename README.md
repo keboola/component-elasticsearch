@@ -50,7 +50,7 @@ Elasticsearch extractor currently supports following authentication methods:
 
 ### SSH (`ssh`) settings
 
-Connection to the Elasticsearch instance via an SSH server is still supported by the extractor
+Connection to the Elasticsearch instance via an SSH server is supported by the extractor
 
 Required parameters for SSH section of the configuration are:
 
@@ -75,6 +75,8 @@ The final SSH configuration should then look like the one below.
 ```
 
 *Note:* If you're using a predefined JSON configuration schema, the new lines in SSH private key will be automatically replaced by `\n`. However, if you're using the raw JSON to configure the component, you need to escape all new lines by `\n`, in order to inject the private key into the configuration properly.
+
+*Note:* For local bind port, the port of target database will be used.
 
 
 ## Row (index) configuration

@@ -52,11 +52,12 @@ KEY_SSH_TUNNEL_HOST = "sshHost"
 KEY_SSH_TUNNEL_PORT = "sshPort"
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
-LOCAL_BIND_PORT = 9200
 
 KEY_LEGACY_SSH = 'ssh'
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
+
+RSA_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 
 
 class Component(ComponentBase):
@@ -248,8 +249,22 @@ class Component(ComponentBase):
 
         logging.info("SSH tunnel is enabled.")
 
+    @staticmethod
+    def is_valid_rsa(rsa_key) -> (bool, str):
+        if not rsa_key.startswith(RSA_HEADER):
+            return False, f"The RSA key does not start with the correct header: {RSA_HEADER}"
+        if "\n" not in rsa_key:
+            return False, "The RSA key does not contain any newline characters."
+        return True, ""
+
     def _create_ssh_tunnel(self, ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
                            db_hostname, db_port) -> None:
+
+        is_valid, error_message = self.is_valid_rsa(private_key)
+        if is_valid:
+            logging.info("SSH tunnel is enabled.")
+        else:
+            raise UserException(f"Invalid RSA key provided: {error_message}")
 
         try:
             private_key = get_private_key(private_key, None)
@@ -266,7 +281,7 @@ class Component(ComponentBase):
                                              ssh_pkey=private_key,
                                              ssh_username=ssh_username,
                                              remote_bind_address=(db_hostname, db_port),
-                                             local_bind_address=(LOCAL_BIND_ADDRESS, LOCAL_BIND_PORT),
+                                             local_bind_address=(LOCAL_BIND_ADDRESS, db_port),
                                              ssh_config_file=None,
                                              allow_agent=False)
 
