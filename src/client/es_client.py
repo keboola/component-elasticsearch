@@ -16,7 +16,7 @@ class ElasticsearchClientException(Exception):
 class ElasticsearchClient(Elasticsearch):
 
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
-        options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
+        options = {"hosts": hosts, "timeout": 60, "retry_on_timeout": True, "max_retries": 5}
 
         if scheme == "https":
             options.update({"verify_certs": False, "ssl_show_warn": False})
