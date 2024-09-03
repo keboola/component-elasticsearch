@@ -83,8 +83,11 @@ class Component(ComponentBase):
             index_name, query = self.parse_index_parameters(params)
             statefile = self.get_state_file()
 
-            if params.get(KEY_SSH, {}).get(KEY_USE_SSH, False):
-                self._create_and_start_ssh_tunnel(params)
+            ssh_options = params.get(KEY_SSH)
+            # fix eternal KBC issue
+            if not isinstance(ssh_options, list):
+                if ssh_options.get(KEY_USE_SSH, False):
+                    self._create_and_start_ssh_tunnel(params)
 
             client = self.get_client(params)
 
