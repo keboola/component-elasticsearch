@@ -8,6 +8,12 @@ from elasticsearch.exceptions import ApiError, TransportError
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
 
+# Exponential backoff configuration for ES requests
+ES_INITIAL_DELAY = 2.0
+ES_MAX_DELAY = 30.0
+ES_BACKOFF_MULTIPLIER = 2.0
+ES_MAX_RETRIES = 10
+
 
 class ElasticsearchClientException(Exception):
     pass
@@ -49,12 +55,18 @@ class ElasticsearchClient(Elasticsearch):
         Yields:
             dict
         """
-        response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
+        response = self._with_backoff(
+            lambda: self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query),
+            op_name="search"
+        )
         for r in self._process_response(response):
             yield r
 
         while len(response['hits']['hits']):
-            response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
+            response = self._with_backoff(
+                lambda: self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT),
+                op_name="scroll"
+            )
             for r in self._process_response(response):
                 yield r
 
@@ -97,6 +109,47 @@ class ElasticsearchClient(Elasticsearch):
             return True
         except (ApiError, TransportError) as e:
             raise ElasticsearchClientException(e)
+
+    def _with_backoff(self, func, op_name: str):
+        """
+        Execute an ES operation with exponential backoff and jitter.
+        Retries on TransportError and ApiError with retryable status codes.
+        """
+        attempt = 0
+        last_error = None
+        while attempt < ES_MAX_RETRIES:
+            try:
+                return func()
+            except TransportError as e:
+                last_error = e
+                # Determine if status is retryable if present
+                status = getattr(e, 'status_code', None)
+                if status is not None and status not in [429, 500, 502, 503, 504]:
+                    raise
+            except ApiError as e:
+                last_error = e
+                status = getattr(e, 'status_code', None)
+                if status is not None and status not in [429, 500, 502, 503, 504]:
+                    raise
+
+            # Compute delay
+            delay = min(ES_INITIAL_DELAY * (ES_BACKOFF_MULTIPLIER ** attempt), ES_MAX_DELAY)
+            attempt += 1
+            # Log and sleep
+            # Two spaces before inline comment are intentional per linter
+            # Add small jitter via Python's random without importing globally
+            from random import random as _rand
+            jitter = delay * 0.1 * (2 * _rand() - 1)
+            final_delay = max(0.1, delay + jitter)
+            # Keep logs concise; external system shows attempt indexes starting at 1
+            print(f"Retrying {op_name} after failure (attempt {attempt} of {ES_MAX_RETRIES}), sleeping {final_delay:.2f}s")
+            import time as _time
+            _time.sleep(final_delay)
+
+        # Exhausted
+        if last_error is not None:
+            raise last_error
+        raise ElasticsearchClientException(f"{op_name} failed after {ES_MAX_RETRIES} retries")
 
     def flatten_json(self, x, out=None, name=''):
         if out is None:
