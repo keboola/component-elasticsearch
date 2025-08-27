@@ -4,6 +4,7 @@ from typing import Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
+from urllib3.util.retry import Retry
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
@@ -16,7 +17,20 @@ class ElasticsearchClientException(Exception):
 class ElasticsearchClient(Elasticsearch):
 
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
-        options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
+        # Configure exponential backoff retry strategy for HTTP connections
+        retry_strategy = Retry(
+            total=5,                    # Maximum number of retries
+            backoff_factor=2.0,         # Backoff factor for exponential delay (1s, 2s, 4s, 8s, 16s)
+            status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
+            allowed_methods=["HEAD", "GET", "POST"],      # HTTP methods to retry
+        )
+
+        options = {
+            "hosts": hosts,
+            "timeout": 30,
+            "retry_on_timeout": True,
+            "max_retries": retry_strategy  # Use our exponential backoff retry strategy
+        }
 
         if scheme == "https":
             options.update({"verify_certs": False, "ssl_show_warn": False})
