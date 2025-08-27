@@ -25,7 +25,7 @@ class ElasticsearchClient(Elasticsearch):
             "max_retries": 10,                 # Maximum number of retries (enables exponential backoff)
             # "retry_on_status": [429, 500, 502, 503, 504],  # HTTP status codes to retry on
             "sniff_on_start": True,          # Don't sniff on startup to avoid connection issues
-            "sniff_on_connection_fail": True, # Sniff when connection fails to find healthy nodes
+            "sniff_on_connection_fail": True,  # Sniff when connection fails to find healthy nodes
         }
 
         if scheme == "https":
