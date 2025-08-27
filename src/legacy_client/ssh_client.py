@@ -173,7 +173,10 @@ class SshClient:
                 delay = self._calculate_backoff_delay(self._retry_attempt)
                 self._retry_attempt += 1
 
-                logging.info(f"Failed to execute SSH command, waiting {delay:.2f}s before reconnection attempt {self._retry_attempt}...")
+                logging.info(
+                    f"Failed to execute SSH command, waiting {delay:.2f}s before "
+                    f"reconnection attempt {self._retry_attempt}..."
+                )
                 time.sleep(delay)
 
                 # Reset connection with exponential backoff
