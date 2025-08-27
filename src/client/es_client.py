@@ -142,7 +142,10 @@ class ElasticsearchClient(Elasticsearch):
             jitter = delay * 0.1 * (2 * _rand() - 1)
             final_delay = max(0.1, delay + jitter)
             # Keep logs concise; external system shows attempt indexes starting at 1
-            print(f"Retrying {op_name} after failure (attempt {attempt} of {ES_MAX_RETRIES}), sleeping {final_delay:.2f}s")
+            print(
+                f"Retrying {op_name} after failure (attempt {attempt} of {ES_MAX_RETRIES}), "
+                f"sleeping {final_delay:.2f}s"
+            )
             import time as _time
             _time.sleep(final_delay)
 
