@@ -4,7 +4,6 @@ from typing import Iterable
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
-from urllib3.util.retry import Retry
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
@@ -17,19 +16,16 @@ class ElasticsearchClientException(Exception):
 class ElasticsearchClient(Elasticsearch):
 
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
-        # Configure exponential backoff retry strategy for HTTP connections
-        retry_strategy = Retry(
-            total=5,                    # Maximum number of retries
-            backoff_factor=2.0,         # Backoff factor for exponential delay (1s, 2s, 4s, 8s, 16s)
-            status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry on
-            allowed_methods=["HEAD", "GET", "POST"],      # HTTP methods to retry
-        )
-
+        # Configure retry behavior with exponential backoff
+        # The Elasticsearch client handles exponential backoff internally when max_retries > 0
         options = {
             "hosts": hosts,
-            "timeout": 30,
-            "retry_on_timeout": True,
-            "max_retries": retry_strategy  # Use our exponential backoff retry strategy
+            "timeout": 30,                    # Request timeout in seconds
+            "retry_on_timeout": True,         # Retry on request timeouts
+            "max_retries": 10,                 # Maximum number of retries (enables exponential backoff)
+            # "retry_on_status": [429, 500, 502, 503, 504],  # HTTP status codes to retry on
+            "sniff_on_start": True,          # Don't sniff on startup to avoid connection issues
+            "sniff_on_connection_fail": True, # Sniff when connection fails to find healthy nodes
         }
 
         if scheme == "https":
