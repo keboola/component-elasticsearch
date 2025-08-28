@@ -190,8 +190,8 @@ class SshClient:
                 self._retry_attempt = attempt
 
                 logging.info(
-                    f"Failed to execute SSH command ({type(e).__name__}: {e}), "
-                    f"waiting {delay:.2f}s before reconnection attempt {self._retry_attempt}..."
+                    f"Retrying SSH command after failure ({type(e).__name__}), "
+                    f"attempt {self._retry_attempt} of {MAX_SSH_RETRIES}, sleeping {delay:.2f}s"
                 )
                 time.sleep(delay)
 

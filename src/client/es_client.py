@@ -26,12 +26,13 @@ class ElasticsearchClient(Elasticsearch):
         # The Elasticsearch client handles exponential backoff internally when max_retries > 0
         options = {
             "hosts": hosts,
-            "timeout": 30,                    # Request timeout in seconds
-            "retry_on_timeout": True,         # Retry on request timeouts
-            "max_retries": 10,                 # Maximum number of retries (enables exponential backoff)
-            # "retry_on_status": [429, 500, 502, 503, 504],  # HTTP status codes to retry on
-            "sniff_on_start": True,          # Don't sniff on startup to avoid connection issues
-            "sniff_on_connection_fail": True,  # Sniff when connection fails to find healthy nodes
+            "timeout": 30,                     # Request timeout in seconds
+            # Disable built-in retries & sniffing; we handle retries with explicit backoff
+            "retry_on_timeout": False,         # Don't auto-retry inside one request
+            "max_retries": 0,                  # No internal retries; use our _with_backoff()
+            "retry_on_status": [],             # Disable internal status-based retries
+            "sniff_on_start": False,           # Avoid extra startup requests
+            "sniff_on_connection_fail": False, # Avoid extra requests during failures
         }
 
         if scheme == "https":
@@ -43,6 +44,17 @@ class ElasticsearchClient(Elasticsearch):
             options.update({"api_key": api_key})
 
         super().__init__(**options)
+
+        # Force-disable internal retries at the Transport layer for all ES versions
+        try:
+            self.transport.max_retries = 0
+            self.transport.retry_on_timeout = False
+            if hasattr(self.transport, "retry_on_status"):
+                # Some versions use list/set/tuple, make it empty to disable
+                self.transport.retry_on_status = ()
+        except Exception:
+            # Be tolerant across client versions; our explicit backoff still applies
+            pass
 
     def extract_data(self, index_name: str, query: str) -> Iterable:
         """
@@ -142,7 +154,8 @@ class ElasticsearchClient(Elasticsearch):
             jitter = delay * 0.1 * (2 * _rand() - 1)
             final_delay = max(0.1, delay + jitter)
             # Keep logs concise; external system shows attempt indexes starting at 1
-            print(
+            import logging as _logging
+            _logging.info(
                 f"Retrying {op_name} after failure (attempt {attempt} of {ES_MAX_RETRIES}), "
                 f"sleeping {final_delay:.2f}s"
             )
