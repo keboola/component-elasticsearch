@@ -21,7 +21,7 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
+    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None, tunnel_restart=None):
         # Configure retry behavior with exponential backoff
         # The Elasticsearch client handles exponential backoff internally when max_retries > 0
         options = {
@@ -55,6 +55,10 @@ class ElasticsearchClient(Elasticsearch):
         except Exception:
             # Be tolerant across client versions; our explicit backoff still applies
             pass
+
+        # Optional callback to restart SSH tunnel from the component when transport breaks
+        # We keep it as a plain callable to avoid tight coupling
+        self._tunnel_restart = tunnel_restart
 
     def extract_data(self, index_name: str, query: str) -> Iterable:
         """
@@ -138,6 +142,19 @@ class ElasticsearchClient(Elasticsearch):
                 status = getattr(e, 'status_code', None)
                 if status is not None and status not in [429, 500, 502, 503, 504]:
                     raise
+                # Proactively restart SSH tunnel on common tunnel/channel errors
+                msg = str(e)
+                if self._tunnel_restart and (
+                    "SSH session not active" in msg or
+                    "open new channel ssh error" in msg or
+                    "Timeout opening channel" in msg
+                ):
+                    import logging as _logging
+                    _logging.info("Detected SSH tunnel/channel failure. Restarting SSH tunnel before retry...")
+                    try:
+                        self._tunnel_restart()
+                    except Exception as _restart_err:
+                        _logging.warning(f"SSH tunnel restart failed: {_restart_err}")
             except ApiError as e:
                 last_error = e
                 status = getattr(e, 'status_code', None)

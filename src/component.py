@@ -89,7 +89,26 @@ class Component(ComponentBase):
                 if ssh_options.get(KEY_USE_SSH, False):
                     self._create_and_start_ssh_tunnel(params)
 
+            # Provide a callback to restart the SSH tunnel on transport failures
+            def _restart_tunnel():
+                if hasattr(self, 'ssh_server') and self.ssh_server:
+                    try:
+                        logging.info("Restarting SSH tunnel on request...")
+                        try:
+                            self.ssh_server.stop()
+                        except Exception:
+                            pass
+                        self.ssh_server.start()
+                        logging.info("SSH tunnel restarted.")
+                    except Exception as e:
+                        logging.warning(f"SSH tunnel restart failed: {e}")
+
             client = self.get_client(params)
+            # Inject the restart callback into the ES client instance if supported
+            try:
+                client._tunnel_restart = _restart_tunnel
+            except Exception:
+                pass
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
             os.makedirs(temp_folder, exist_ok=True)
