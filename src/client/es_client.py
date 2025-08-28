@@ -32,7 +32,7 @@ class ElasticsearchClient(Elasticsearch):
             "max_retries": 0,                  # No internal retries; use our _with_backoff()
             "retry_on_status": [],             # Disable internal status-based retries
             "sniff_on_start": False,           # Avoid extra startup requests
-            "sniff_on_connection_fail": False, # Avoid extra requests during failures
+            "sniff_on_connection_fail": False,  # Avoid extra requests during failures
         }
 
         if scheme == "https":
