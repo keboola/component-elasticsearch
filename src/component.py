@@ -3,6 +3,8 @@ import logging
 import uuid
 import os
 import shutil
+import time
+import socket
 import dateparser
 import pytz
 
@@ -90,6 +92,11 @@ class Component(ComponentBase):
                     self._create_and_start_ssh_tunnel(params)
 
             client = self.get_client(params)
+            # Inject the restart callback into the ES client instance if supported
+            try:
+                client._tunnel_restart = self.restart_ssh_tunnel
+            except Exception:
+                pass
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
             os.makedirs(temp_folder, exist_ok=True)
@@ -241,6 +248,16 @@ class Component(ComponentBase):
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
+        # Persist original tunnel configuration for future restarts
+        self._tunnel_cfg = (
+            ssh_username,
+            private_key,
+            ssh_tunnel_host,
+            ssh_tunnel_port,
+            db_hostname,
+            db_port,
+        )
+
         self._create_ssh_tunnel(ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
                                 db_hostname, db_port)
 
@@ -251,6 +268,57 @@ class Component(ComponentBase):
                 "Failed to establish SSH connection. Recheck all SSH configuration parameters") from e
 
         logging.info("SSH tunnel is enabled.")
+
+    def restart_ssh_tunnel(self) -> None:
+        """
+        Fully restart SSH tunnel using the original configuration.
+        Stops and closes the current tunnel, recreates a new forwarder, and starts it.
+        """
+        if not hasattr(self, 'ssh_server'):
+            logging.info("SSH tunnel not initialized; nothing to restart.")
+            return
+
+        logging.info("Restarting SSH tunnel on request...")
+        try:
+            try:
+                self.ssh_server.stop()
+            except Exception:
+                pass
+            try:
+                # Some versions expose close()
+                close_fn = getattr(self.ssh_server, 'close', None)
+                if callable(close_fn):
+                    close_fn()
+            except Exception:
+                pass
+        finally:
+            # Give the OS a moment to release sockets
+            time.sleep(1.0)
+
+        cfg = getattr(self, '_tunnel_cfg', None)
+        if not cfg:
+            logging.warning("SSH tunnel configuration missing; cannot restart.")
+            return
+
+        try:
+            self._create_ssh_tunnel(*cfg)
+            self.ssh_server.start()
+            # Verify local bind is accepting connections before returning
+            db_port = cfg[-1]
+            deadline = time.time() + 10.0
+            while time.time() < deadline:
+                try:
+                    with socket.create_connection((LOCAL_BIND_ADDRESS, int(db_port)), timeout=1.0):
+                        logging.info("SSH tunnel is accepting connections.")
+                        break
+                except OSError:
+                    time.sleep(0.3)
+            else:
+                logging.warning("SSH tunnel did not become ready within 10s, proceeding anyway.")
+            logging.info("SSH tunnel restarted.")
+        except BaseSSHTunnelForwarderError as e:
+            logging.warning(f"SSH tunnel restart failed: {e}")
+            raise
 
     @staticmethod
     def is_valid_rsa(rsa_key) -> (bool, str):

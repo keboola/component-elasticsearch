@@ -3,8 +3,9 @@ import json
 import logging
 import socket
 import sys
+import time
+import random
 from typing import List, Tuple
-from retry import retry
 import paramiko
 from furl import furl
 
@@ -19,6 +20,13 @@ SCROLL_PARAM = 'scroll'
 DEFAULT_SIZE = 2000
 DEFAULT_SCROLL = '15m'
 SSH_COMMAND_TIMEOUT = 60  # this is in seconds
+
+# Exponential backoff configuration for connection retries
+INITIAL_RETRY_DELAY = 2.0  # Initial delay in seconds
+MAX_RETRY_DELAY = 30.0     # Maximum delay cap in seconds
+BACKOFF_MULTIPLIER = 2.0   # Exponential backoff multiplier
+JITTER_RANGE = 0.1         # Random jitter to avoid thundering herd (10% of delay)
+MAX_SSH_RETRIES = 5        # Total attempts when executing a remote command
 
 
 class SshClient:
@@ -38,11 +46,38 @@ class SshClient:
 
         self.db = Database
         self._default_size = DEFAULT_SIZE
+        self._retry_attempt = 0  # Track retry attempts for exponential backoff
+
+    def _calculate_backoff_delay(self, attempt: int) -> float:
+        """
+        Calculate exponential backoff delay with jitter.
+
+        Args:
+            attempt: Current retry attempt number (0-based)
+
+        Returns:
+            Delay in seconds before next retry attempt
+        """
+        # Calculate exponential delay: initial_delay * (multiplier ^ attempt)
+        delay = INITIAL_RETRY_DELAY * (BACKOFF_MULTIPLIER ** attempt)
+
+        # Cap the delay to maximum allowed
+        delay = min(delay, MAX_RETRY_DELAY)
+
+        # Add random jitter to avoid thundering herd problem
+        # Jitter is +/- JITTER_RANGE percentage of the delay
+        jitter = delay * JITTER_RANGE * (2 * random.random() - 1)
+        final_delay = delay + jitter
+
+        # Ensure delay is never negative
+        return max(0.1, final_delay)
 
     def connect_ssh(self):
         try:
             self.ssh.connect(hostname=self.SshTunnel.hostname, port=self.SshTunnel.port,
                              username=self.SshTunnel.username, pkey=self.pkey)
+            # Reset retry counter on successful connection
+            self._retry_attempt = 0
         except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
             logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
             sys.exit(1)
@@ -117,30 +152,56 @@ class SshClient:
         logging.debug(f"Constructed cURL: {curl}.")
         return curl
 
-    @retry(paramiko.ssh_exception.SSHException, delay=3, tries=5, backoff=3)
     def _execute_ssh_command(self, curl):
         """
-        Wrapped func to execute ssh command with timeout defined in SSH_COMMAND_TIMEOUT
+        Execute ssh command with timeout defined in SSH_COMMAND_TIMEOUT (single attempt).
         """
         _, stdout, stderr = self.ssh.exec_command(command=curl, timeout=SSH_COMMAND_TIMEOUT)
         return _, stdout, stderr
 
     def execute_ssh_command(self, curl):
         """
-        Executes ssh command with timeout defined in SSH_COMMAND_TIMEOUT
+        Executes ssh command with timeout defined in SSH_COMMAND_TIMEOUT.
+        Implements exponential backoff for connection recovery and retries on failures.
         """
-        try:
-            _, stdout, stderr = self._execute_ssh_command(curl)
-        except paramiko.ssh_exception.SSHException:
+        attempt = 0
+        while True:
             try:
-                logging.info("Failed to execute SSH command, resetting connection and trying again...")
-                self.connect_ssh()
                 _, stdout, stderr = self._execute_ssh_command(curl)
-            except paramiko.ssh_exception.SSHException:
-                logging.exception(f"Maximum number of retries (3) reached when executing ssh_command {curl}")
-                sys.exit(1)
-            return _, stdout, stderr
-        return _, stdout, stderr
+                # Ensure the remote command completed and detect failures.
+                exit_status = stdout.channel.recv_exit_status()
+                if exit_status != 0:
+                    raise paramiko.ssh_exception.SSHException(
+                        f"Remote command failed with exit status {exit_status}"
+                    )
+                return _, stdout, stderr
+            except (paramiko.ssh_exception.SSHException,
+                    paramiko.ssh_exception.ChannelException,
+                    OSError,
+                    EOFError) as e:
+                if attempt >= MAX_SSH_RETRIES - 1:
+                    logging.exception(
+                        f"Maximum number of retries ({MAX_SSH_RETRIES}) reached when executing ssh_command {curl}"
+                    )
+                    sys.exit(1)
+
+                delay = self._calculate_backoff_delay(attempt)
+                attempt += 1
+                self._retry_attempt = attempt
+
+                logging.info(
+                    f"Retrying SSH command after failure ({type(e).__name__}), "
+                    f"attempt {self._retry_attempt} of {MAX_SSH_RETRIES}, sleeping {delay:.2f}s"
+                )
+                time.sleep(delay)
+
+                # Reset connection before next attempt
+                try:
+                    self.ssh.close()
+                except Exception:
+                    pass
+                self.connect_ssh()
+                # Loop continues for next attempt
 
     def get_first_page(self, index, body):
 
