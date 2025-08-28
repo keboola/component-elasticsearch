@@ -21,7 +21,14 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None, tunnel_restart=None):
+    def __init__(
+        self,
+        hosts: list,
+        scheme: str = None,
+        http_auth: tuple = None,
+        api_key: tuple = None,
+        tunnel_restart=None,
+    ):
         # Configure retry behavior with exponential backoff
         # The Elasticsearch client handles exponential backoff internally when max_retries > 0
         options = {
