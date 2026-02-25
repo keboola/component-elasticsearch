@@ -85,9 +85,11 @@ class Component(ComponentBase):
 
             ssh_options = params.get(KEY_SSH)
             # fix eternal KBC issue
-            if not isinstance(ssh_options, list):
+            if ssh_options is not None and not isinstance(ssh_options, list):
                 if ssh_options.get(KEY_USE_SSH, False):
                     self._create_and_start_ssh_tunnel(params)
+                    # Override hostname to route traffic through the SSH tunnel
+                    params[KEY_GROUP_DB][KEY_DB_HOSTNAME] = LOCAL_BIND_ADDRESS
 
             client = self.get_client(params)
 
@@ -106,8 +108,8 @@ class Component(ComponentBase):
             except Exception as e:
                 raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
             finally:
-                if hasattr(self, 'ssh_tunnel') and self.ssh_tunnel.is_active:
-                    self.ssh_tunnel.stop()
+                if hasattr(self, 'ssh_server') and self.ssh_server.is_active:
+                    self.ssh_server.stop()
 
             self.write_manifest(out_table)
             statefile[out_table_name] = wr.fieldnames
