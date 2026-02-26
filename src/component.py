@@ -84,14 +84,14 @@ class Component(ComponentBase):
             statefile = self.get_state_file()
 
             ssh_options = params.get(KEY_SSH)
+            use_ssh_tunnel = False
             # fix eternal KBC issue
             if ssh_options is not None and not isinstance(ssh_options, list):
                 if ssh_options.get(KEY_USE_SSH, False):
                     self._create_and_start_ssh_tunnel(params)
-                    # Override hostname to route traffic through the SSH tunnel
-                    params[KEY_GROUP_DB][KEY_DB_HOSTNAME] = LOCAL_BIND_ADDRESS
+                    use_ssh_tunnel = True
 
-            client = self.get_client(params)
+            client = self.get_client(params, hostname_override=LOCAL_BIND_ADDRESS if use_ssh_tunnel else None)
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
             os.makedirs(temp_folder, exist_ok=True)
@@ -125,13 +125,13 @@ class Component(ComponentBase):
     def cleanup(temp_folder: str):
         shutil.rmtree(temp_folder)
 
-    def get_client(self, params: dict) -> ElasticsearchClient:
+    def get_client(self, params: dict, hostname_override: str = None) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
         if not auth_params:
             return self.get_client_legacy(params)
 
         db_params = params.get(KEY_GROUP_DB)
-        db_hostname = db_params.get(KEY_DB_HOSTNAME)
+        db_hostname = hostname_override if hostname_override else db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
         scheme = params.get(KEY_SCHEME, "http")
 
