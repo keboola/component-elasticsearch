@@ -7,6 +7,7 @@ from elasticsearch.exceptions import ApiError, TransportError
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = '15m'
+_META_FIELDS = {"_id", "_index", "_type", "_score", "_ignored"}
 
 
 class ElasticsearchClientException(Exception):
@@ -49,9 +50,10 @@ class ElasticsearchClient(Elasticsearch):
                 yield r
 
     def _process_response(self, response: dict) -> Iterable:
-        results = [hit["_source"] for hit in response['hits']['hits']]
-        for result in results:
-            yield self.flatten_json(result)
+        for hit in response['hits']['hits']:
+            meta = {k: v for k, v in hit.items() if k in _META_FIELDS}
+            source = hit.get("_source", {})
+            yield self.flatten_json({**meta, **source})
 
     def ping(
         self,
