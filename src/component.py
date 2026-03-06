@@ -32,7 +32,7 @@ KEY_API_KEY_ID = 'api_key_id'
 KEY_API_KEY = '#api_key'
 KEY_BEARER = '#bearer'
 KEY_SCHEME = 'scheme'
-KEY_INCLUDE_META_FIELDS = 'include_meta_fields'
+KEY_EXTRACT_METADATA_FIELDS = 'extract_metadata_fields'
 
 KEY_GROUP_DATE = 'date'
 KEY_DATE_APPEND = 'append_date'
@@ -81,7 +81,7 @@ class Component(ComponentBase):
             user_defined_pk = params.get(KEY_PRIMARY_KEYS, [])
             incremental = params.get(KEY_INCREMENTAL, False)
 
-            include_meta_fields = params.get(KEY_INCLUDE_META_FIELDS, False)
+            extract_metadata_fields = params.get(KEY_EXTRACT_METADATA_FIELDS, False)
             index_name, query = self.parse_index_parameters(params)
             statefile = self.get_state_file()
 
@@ -94,7 +94,7 @@ class Component(ComponentBase):
                     use_ssh_tunnel = True
 
             client = self.get_client(params, hostname_override=LOCAL_BIND_ADDRESS if use_ssh_tunnel else None,
-                                     include_meta_fields=include_meta_fields)
+                                     extract_metadata_fields=extract_metadata_fields)
 
             temp_folder = os.path.join(self.data_folder_path, "temp")
             os.makedirs(temp_folder, exist_ok=True)
@@ -129,7 +129,7 @@ class Component(ComponentBase):
         shutil.rmtree(temp_folder)
 
     def get_client(self, params: dict, hostname_override: str = None,
-                   include_meta_fields: bool = False) -> ElasticsearchClient:
+                   extract_metadata_fields: bool = False) -> ElasticsearchClient:
         auth_params = params.get(KEY_GROUP_AUTH)
         if not auth_params:
             return self.get_client_legacy(params)
@@ -155,16 +155,18 @@ class Component(ComponentBase):
                 raise UserException("You must specify both username and password for basic type authorization")
 
             auth = (username, password)
-            client = ElasticsearchClient([setup], scheme, http_auth=auth, include_meta_fields=include_meta_fields)
+            client = ElasticsearchClient([setup], scheme, http_auth=auth,
+                                         extract_metadata_fields=extract_metadata_fields)
 
         elif auth_type == "api_key":
             api_key_id = auth_params.get(KEY_API_KEY_ID)
             api_key = auth_params.get(KEY_API_KEY)
             api_key = (api_key_id, api_key)
-            client = ElasticsearchClient([setup], scheme, api_key=api_key, include_meta_fields=include_meta_fields)
+            client = ElasticsearchClient([setup], scheme, api_key=api_key,
+                                         extract_metadata_fields=extract_metadata_fields)
 
         elif auth_type == "no_auth":
-            client = ElasticsearchClient([setup], scheme, include_meta_fields=include_meta_fields)
+            client = ElasticsearchClient([setup], scheme, extract_metadata_fields=extract_metadata_fields)
 
         else:
             raise UserException(f"Unsupported auth_type: {auth_type}")

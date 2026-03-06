@@ -102,9 +102,9 @@
                 ]
             }
         },
-        "include_meta_fields": {
-            "title": "Include Metadata Fields",
-            "description": "When enabled, Elasticsearch metadata fields (<strong>_id</strong>, <strong>_index</strong>, <strong>_type</strong>, <strong>_score</strong>, <strong>_ignored</strong>) will be added as extra columns to the output table.",
+        "extract_metadata_fields": {
+            "title": "Extract Elasticsearch Metadata Fields",
+            "description": "When enabled, Elasticsearch metadata fields listed in your query's <strong>_source</strong> (e.g. <code>_id</code>, <code>_index</code>) will be included as columns in the output table. Add the desired fields to <strong>_source</strong> in your query to control which ones appear.",
             "type": "boolean",
             "default": false,
             "propertyOrder": 700

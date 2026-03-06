@@ -17,9 +17,9 @@ class ElasticsearchClientException(Exception):
 class ElasticsearchClient(Elasticsearch):
 
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None,
-                 include_meta_fields: bool = False):
+                 extract_metadata_fields: bool = False):
         options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
-        self.include_meta_fields = include_meta_fields
+        self.extract_metadata_fields = extract_metadata_fields
 
         if scheme == "https":
             options.update({"verify_certs": False, "ssl_show_warn": False})
@@ -31,9 +31,13 @@ class ElasticsearchClient(Elasticsearch):
 
         super().__init__(**options)
 
-    def extract_data(self, index_name: str, query: str) -> Iterable:
+    def extract_data(self, index_name: str, query: dict) -> Iterable:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
+
+        Metadata fields (_id, _index, etc.) listed in the query's _source are
+        automatically surfaced — Elasticsearch ignores them in _source, so we
+        pull them from the hit level instead.
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
@@ -42,20 +46,30 @@ class ElasticsearchClient(Elasticsearch):
         Yields:
             dict
         """
+        requested_meta = self._requested_meta_fields(query) if self.extract_metadata_fields else set()
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
-        for r in self._process_response(response):
+        for r in self._process_response(response, requested_meta):
             yield r
 
         while len(response['hits']['hits']):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
-            for r in self._process_response(response):
+            for r in self._process_response(response, requested_meta):
                 yield r
 
-    def _process_response(self, response: dict) -> Iterable:
+    @staticmethod
+    def _requested_meta_fields(query: dict) -> set:
+        source = query.get("_source", [])
+        if isinstance(source, list):
+            return {f for f in source if f in _META_FIELDS}
+        if isinstance(source, dict):
+            return {f for f in source.get("includes", []) if f in _META_FIELDS}
+        return set()
+
+    def _process_response(self, response: dict, requested_meta: set) -> Iterable:
         for hit in response['hits']['hits']:
             source = hit.get("_source", {})
-            if self.include_meta_fields:
-                meta = {k: v for k, v in hit.items() if k in _META_FIELDS}
+            if requested_meta:
+                meta = {k: v for k, v in hit.items() if k in requested_meta}
                 yield self.flatten_json({**meta, **source})
             else:
                 yield self.flatten_json(source)
