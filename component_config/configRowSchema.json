@@ -104,7 +104,7 @@
         },
         "extract_metadata_fields": {
             "title": "Extract Elasticsearch Metadata Fields",
-            "description": "When enabled, Elasticsearch metadata fields listed in your query's <strong>_source</strong> (e.g. <code>_id</code>, <code>_index</code>) will be included as columns in the output table. Add the desired fields to <strong>_source</strong> in your query to control which ones appear.",
+            "description": "When enabled, Elasticsearch metadata fields listed in your query's <strong>_source</strong> (e.g. <code>_id</code>, <code>_index</code>) will be included as columns in the output table. Fields are prefixed with <code>es</code> to avoid naming conflicts — <code>_id</code> becomes <code>es_id</code>, <code>_index</code> becomes <code>es_index</code>, etc.",
             "type": "boolean",
             "default": false,
             "propertyOrder": 700

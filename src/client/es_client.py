@@ -69,7 +69,9 @@ class ElasticsearchClient(Elasticsearch):
         for hit in response['hits']['hits']:
             source = hit.get("_source", {})
             if requested_meta:
-                meta = {k: v for k, v in hit.items() if k in requested_meta}
+                # Strip leading underscore so Keboola Storage accepts the column names
+                # e.g. _id -> es_id, _index -> es_index
+                meta = {f"es{k}": hit.get(k) for k in requested_meta}
                 yield self.flatten_json({**meta, **source})
             else:
                 yield self.flatten_json(source)
