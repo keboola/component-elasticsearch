@@ -16,8 +16,10 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
 
-    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
+    def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None,
+                 include_meta_fields: bool = False):
         options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
+        self.include_meta_fields = include_meta_fields
 
         if scheme == "https":
             options.update({"verify_certs": False, "ssl_show_warn": False})
@@ -51,9 +53,12 @@ class ElasticsearchClient(Elasticsearch):
 
     def _process_response(self, response: dict) -> Iterable:
         for hit in response['hits']['hits']:
-            meta = {k: v for k, v in hit.items() if k in _META_FIELDS}
             source = hit.get("_source", {})
-            yield self.flatten_json({**meta, **source})
+            if self.include_meta_fields:
+                meta = {k: v for k, v in hit.items() if k in _META_FIELDS}
+                yield self.flatten_json({**meta, **source})
+            else:
+                yield self.flatten_json(source)
 
     def ping(
         self,

@@ -101,6 +101,13 @@
                     "Full Load"
                 ]
             }
+        },
+        "include_meta_fields": {
+            "title": "Include Metadata Fields",
+            "description": "When enabled, Elasticsearch metadata fields (<strong>_id</strong>, <strong>_index</strong>, <strong>_type</strong>, <strong>_score</strong>, <strong>_ignored</strong>) will be added as extra columns to the output table.",
+            "type": "boolean",
+            "default": false,
+            "propertyOrder": 700
         }
     }
 }
