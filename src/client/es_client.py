@@ -15,13 +15,13 @@ class ElasticsearchClientException(Exception):
 
 class ElasticsearchClient(Elasticsearch):
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
-        options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
+        options = {"hosts": hosts, "request_timeout": 30, "retry_on_timeout": True, "max_retries": 5}
 
         if scheme == "https":
             options.update({"verify_certs": False, "ssl_show_warn": False})
 
         if http_auth:
-            options.update({"http_auth": http_auth})
+            options.update({"basic_auth": http_auth})
         elif api_key:
             options.update({"api_key": api_key})
 
