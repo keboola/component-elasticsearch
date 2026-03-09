@@ -1,3 +1,3 @@
-active,age,user_id,name
-True,30,1,Adam
-True,31,2,Božena
+active,age,name,user_id
+True,30,Adam,1
+True,31,Božena,2

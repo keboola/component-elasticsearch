@@ -1,1 +1,1 @@
-{"test-products": ["category", "price", "product_id", "name"]}
+{"test-products": ["category", "name", "price", "product_id"]}

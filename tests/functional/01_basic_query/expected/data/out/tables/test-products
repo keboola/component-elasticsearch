@@ -1,4 +1,4 @@
-category,price,product_id,name
-fruit,1,1,Apples
-fruit,2,2,Bananas
-fruit,3,3,Citrons
+category,name,price,product_id
+fruit,Apples,1,1
+fruit,Bananas,2,2
+fruit,Citrons,3,3
