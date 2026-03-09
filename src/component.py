@@ -16,32 +16,32 @@ from client.ssh_utils import SomeSSHException, get_private_key
 from sshtunnel import SSHTunnelForwarder, BaseSSHTunnelForwarderError
 
 # configuration variables
-KEY_GROUP_DB = 'db'
-KEY_DB_HOSTNAME = 'hostname'
-KEY_DB_PORT = 'port'
-KEY_QUERY = 'request_body'  # this is named like this for backwards compatibility
-KEY_INDEX_NAME = 'index_name'
-KEY_STORAGE_TABLE = 'storage_table'
-KEY_PRIMARY_KEYS = 'primary_keys'
-KEY_INCREMENTAL = 'incremental'
-KEY_GROUP_AUTH = 'authentication'
-KEY_AUTH_TYPE = 'auth_type'
-KEY_USERNAME = 'username'
-KEY_PASSWORD = '#password'
-KEY_API_KEY_ID = 'api_key_id'
-KEY_API_KEY = '#api_key'
-KEY_BEARER = '#bearer'
-KEY_SCHEME = 'scheme'
+KEY_GROUP_DB = "db"
+KEY_DB_HOSTNAME = "hostname"
+KEY_DB_PORT = "port"
+KEY_QUERY = "request_body"  # this is named like this for backwards compatibility
+KEY_INDEX_NAME = "index_name"
+KEY_STORAGE_TABLE = "storage_table"
+KEY_PRIMARY_KEYS = "primary_keys"
+KEY_INCREMENTAL = "incremental"
+KEY_GROUP_AUTH = "authentication"
+KEY_AUTH_TYPE = "auth_type"
+KEY_USERNAME = "username"
+KEY_PASSWORD = "#password"
+KEY_API_KEY_ID = "api_key_id"
+KEY_API_KEY = "#api_key"
+KEY_BEARER = "#bearer"
+KEY_SCHEME = "scheme"
 
-KEY_GROUP_DATE = 'date'
-KEY_DATE_APPEND = 'append_date'
-KEY_DATE_FORMAT = 'format'
-KEY_DATE_SHIFT = 'shift'
-KEY_DATE_TZ = 'time_zone'
-DATE_PLACEHOLDER = '{{date}}'
-DEFAULT_DATE = 'yesterday'
-DEFAULT_DATE_FORMAT = '%Y-%m-%d'
-DEFAULT_TZ = 'UTC'
+KEY_GROUP_DATE = "date"
+KEY_DATE_APPEND = "append_date"
+KEY_DATE_FORMAT = "format"
+KEY_DATE_SHIFT = "shift"
+KEY_DATE_TZ = "time_zone"
+DATE_PLACEHOLDER = "{{date}}"
+DEFAULT_DATE = "yesterday"
+DEFAULT_DATE_FORMAT = "%Y-%m-%d"
+DEFAULT_TZ = "UTC"
 
 KEY_SSH = "ssh_options"
 KEY_USE_SSH = "enabled"
@@ -53,7 +53,7 @@ KEY_SSH_TUNNEL_PORT = "sshPort"
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
 
-KEY_LEGACY_SSH = 'ssh'
+KEY_LEGACY_SSH = "ssh"
 
 REQUIRED_PARAMETERS = [KEY_GROUP_DB]
 
@@ -61,7 +61,6 @@ RSA_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 
 
 class Component(ComponentBase):
-
     def __init__(self):
         super().__init__()
 
@@ -97,8 +96,9 @@ class Component(ComponentBase):
             os.makedirs(temp_folder, exist_ok=True)
 
             columns = statefile.get(out_table_name, [])
-            out_table = self.create_out_table_definition(out_table_name, primary_key=user_defined_pk,
-                                                         incremental=incremental)
+            out_table = self.create_out_table_definition(
+                out_table_name, primary_key=user_defined_pk, incremental=incremental
+            )
 
             try:
                 with ElasticDictWriter(out_table.full_path, columns) as wr:
@@ -108,7 +108,7 @@ class Component(ComponentBase):
             except Exception as e:
                 raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
             finally:
-                if hasattr(self, 'ssh_server') and self.ssh_server.is_active:
+                if hasattr(self, "ssh_server") and self.ssh_server.is_active:
                     self.ssh_server.stop()
 
             self.write_manifest(out_table)
@@ -197,8 +197,8 @@ class Component(ComponentBase):
 
     @staticmethod
     def _parse_query(params):
-        _query = params.get(KEY_QUERY, '{}').strip()
-        query_string = _query if _query != '' else '{}'
+        _query = params.get(KEY_QUERY, "{}").strip()
+        query_string = _query if _query != "" else "{}"
 
         try:
             logging.info(f"Using query: {query_string}")
@@ -216,15 +216,19 @@ class Component(ComponentBase):
         _date_tz = pytz.timezone(_tz).normalize(_date)
         _date_formatted = _date_tz.strftime(date_config.get(KEY_DATE_FORMAT, DEFAULT_DATE_FORMAT))
 
-        logging.info(f"Replaced date placeholder with value {_date_formatted}. "
-                     f"Downloading data from index {index.replace(DATE_PLACEHOLDER, _date_formatted)}.")
+        logging.info(
+            f"Replaced date placeholder with value {_date_formatted}. "
+            f"Downloading data from index {index.replace(DATE_PLACEHOLDER, _date_formatted)}."
+        )
         return index.replace(DATE_PLACEHOLDER, _date_formatted)
 
     @staticmethod
     def _validate_timezone(tz):
         if tz not in pytz.all_timezones:
-            raise UserException(f"Incorrect timezone {tz} provided. Timezone must be a valid DB timezone name. "
-                                "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List.")
+            raise UserException(
+                f"Incorrect timezone {tz} provided. Timezone must be a valid DB timezone name. "
+                "See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List."
+            )
         return tz
 
     @staticmethod
@@ -243,14 +247,12 @@ class Component(ComponentBase):
         db_params = params.get(KEY_GROUP_DB)
         db_hostname = db_params.get(KEY_DB_HOSTNAME)
         db_port = db_params.get(KEY_DB_PORT)
-        self._create_ssh_tunnel(ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
-                                db_hostname, db_port)
+        self._create_ssh_tunnel(ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port, db_hostname, db_port)
 
         try:
             self.ssh_server.start()
         except BaseSSHTunnelForwarderError as e:
-            raise UserException(
-                "Failed to establish SSH connection. Recheck all SSH configuration parameters") from e
+            raise UserException("Failed to establish SSH connection. Recheck all SSH configuration parameters") from e
 
         logging.info("SSH tunnel is enabled.")
 
@@ -262,9 +264,9 @@ class Component(ComponentBase):
             return False, "The RSA key does not contain any newline characters."
         return True, ""
 
-    def _create_ssh_tunnel(self, ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port,
-                           db_hostname, db_port) -> None:
-
+    def _create_ssh_tunnel(
+        self, ssh_username, private_key, ssh_tunnel_host, ssh_tunnel_port, db_hostname, db_port
+    ) -> None:
         is_valid, error_message = self.is_valid_rsa(private_key)
         if is_valid:
             logging.info("SSH tunnel is enabled.")
@@ -281,14 +283,16 @@ class Component(ComponentBase):
         except ValueError as e:
             raise UserException("Remote port must be a valid integer") from e
 
-        self.ssh_server = SSHTunnelForwarder(ssh_address_or_host=ssh_tunnel_host,
-                                             ssh_port=ssh_tunnel_port,
-                                             ssh_pkey=private_key,
-                                             ssh_username=ssh_username,
-                                             remote_bind_address=(db_hostname, db_port),
-                                             local_bind_address=(LOCAL_BIND_ADDRESS, db_port),
-                                             ssh_config_file=None,
-                                             allow_agent=False)
+        self.ssh_server = SSHTunnelForwarder(
+            ssh_address_or_host=ssh_tunnel_host,
+            ssh_port=ssh_tunnel_port,
+            ssh_pkey=private_key,
+            ssh_username=ssh_username,
+            remote_bind_address=(db_hostname, db_port),
+            local_bind_address=(LOCAL_BIND_ADDRESS, db_port),
+            ssh_config_file=None,
+            allow_agent=False,
+        )
 
 
 """

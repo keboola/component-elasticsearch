@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ApiError, TransportError
 
 DEFAULT_SIZE = 10_000
-SCROLL_TIMEOUT = '15m'
+SCROLL_TIMEOUT = "15m"
 
 
 class ElasticsearchClientException(Exception):
@@ -14,7 +14,6 @@ class ElasticsearchClientException(Exception):
 
 
 class ElasticsearchClient(Elasticsearch):
-
     def __init__(self, hosts: list, scheme: str = None, http_auth: tuple = None, api_key: tuple = None):
         options = {"hosts": hosts, "timeout": 30, "retry_on_timeout": True, "max_retries": 5}
 
@@ -43,13 +42,13 @@ class ElasticsearchClient(Elasticsearch):
         for r in self._process_response(response):
             yield r
 
-        while len(response['hits']['hits']):
+        while len(response["hits"]["hits"]):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
             for r in self._process_response(response):
                 yield r
 
     def _process_response(self, response: dict) -> Iterable:
-        results = [hit["_source"] for hit in response['hits']['hits']]
+        results = [hit["_source"] for hit in response["hits"]["hits"]]
         for result in results:
             yield self.flatten_json(result)
 
@@ -88,12 +87,12 @@ class ElasticsearchClient(Elasticsearch):
         except (ApiError, TransportError) as e:
             raise ElasticsearchClientException(e)
 
-    def flatten_json(self, x, out=None, name=''):
+    def flatten_json(self, x, out=None, name=""):
         if out is None:
             out = dict()
         if type(x) is dict:
             for a in x:
-                self.flatten_json(x[a], out, name + a + '.')
+                self.flatten_json(x[a], out, name + a + ".")
 
         elif type(x) is list:
             out[name[:-1]] = json.dumps(x)

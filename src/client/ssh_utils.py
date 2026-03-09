@@ -23,11 +23,11 @@ def get_private_key(input_key, private_key_password):
 
 def _get_decoded_key(input_key):
     """
-        Have to satisfy both encoded and not encoded keys
+    Have to satisfy both encoded and not encoded keys
     """
     b64_decoded_input_key = ""
     with contextlib.suppress(binascii.Error):
-        b64_decoded_input_key = base64.b64decode(input_key, validate=True).decode('utf-8')
+        b64_decoded_input_key = base64.b64decode(input_key, validate=True).decode("utf-8")
 
     is_valid_b64, message_b64 = validate_ssh_private_key(b64_decoded_input_key)
     is_valid, message = validate_ssh_private_key(input_key)
