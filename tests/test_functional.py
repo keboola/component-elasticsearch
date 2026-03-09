@@ -1,6 +1,6 @@
 import unittest
 
-from datadirtest import DataDirTester
+from keboola.datadirtest import DataDirTester
 from freezegun import freeze_time
 
 

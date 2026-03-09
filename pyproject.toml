@@ -1,0 +1,26 @@
+[project]
+name = "kds-team-ex-elasticsearch"
+version = "1.0.0"
+description = "Keboola Connection Elasticsearch Extractor"
+requires-python = ">=3.11"
+dependencies = [
+    "keboola.component==1.4.3",
+    "keboola.csvwriter",
+    "keboola.json-to-csv",
+    "elasticsearch==8.10.1",
+    "dateparser",
+    "paramiko==3.4.0",
+    "retry",
+    "furl",
+    "cryptography==36.0.2",
+    "sshtunnel==0.4.0",
+    "flake8>=7.3.0",
+    "keboola-datadirtest>=2.0.2",
+]
+
+[dependency-groups]
+dev = [
+    "mock",
+    "freezegun",
+    "faker",
+]

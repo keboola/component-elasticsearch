@@ -1,4 +1,4 @@
-from datadirtest import TestDataDir
+from keboola.datadirtest import TestDataDir
 from elasticsearch import Elasticsearch
 
 
