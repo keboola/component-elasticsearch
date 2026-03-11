@@ -1,0 +1,3 @@
+user_id,_index,active,name,_id,_score,age
+1,test-users,True,Adam,1,,30
+2,test-users,True,Božena,2,,31
