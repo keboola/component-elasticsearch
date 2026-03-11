@@ -1,1 +1,1 @@
-{"test-users": ["user_id", "_index", "active", "name", "_id", "_score", "age"]}
+{"test-users": ["user_id", "index", "active", "name", "id", "score", "age"]}
