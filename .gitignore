@@ -12,3 +12,6 @@ __pycache__/
 
 # PyENV
 .python-version
+
+# uv / virtual environments
+.venv

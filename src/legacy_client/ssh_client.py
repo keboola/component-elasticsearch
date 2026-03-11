@@ -13,18 +13,16 @@ Headers = List[Tuple[str, str]]
 # Workaround for re-key timeout: https://github.com/paramiko/paramiko/issues/822
 paramiko.packet.Packetizer.REKEY_BYTES = 1e12
 
-SIZE_PARAM = 'size'
-SCROLL_PARAM = 'scroll'
+SIZE_PARAM = "size"
+SCROLL_PARAM = "scroll"
 
 DEFAULT_SIZE = 2000
-DEFAULT_SCROLL = '15m'
+DEFAULT_SCROLL = "15m"
 SSH_COMMAND_TIMEOUT = 60  # this is in seconds
 
 
 class SshClient:
-
     def __init__(self, SshTunnel, Database):
-
         self.SshTunnel = SshTunnel
 
         pkey_file = io.StringIO(SshTunnel.key)
@@ -41,8 +39,12 @@ class SshClient:
 
     def connect_ssh(self):
         try:
-            self.ssh.connect(hostname=self.SshTunnel.hostname, port=self.SshTunnel.port,
-                             username=self.SshTunnel.username, pkey=self.pkey)
+            self.ssh.connect(
+                hostname=self.SshTunnel.hostname,
+                port=self.SshTunnel.port,
+                username=self.SshTunnel.username,
+                pkey=self.pkey,
+            )
         except (socket.gaierror, paramiko.ssh_exception.AuthenticationException):
             logging.exception("Could not establish SSH tunnel. Check that all SSH parameters are correct.")
             sys.exit(1)
@@ -96,13 +98,12 @@ class SshClient:
         return pkey
 
     def build_curl(self, url, request_type, headers=None, json_body=None):
-
         # Start of curl string
-        curl = 'curl -i'
-        curl += f' --request {request_type}'
+        curl = "curl -i"
+        curl += f" --request {request_type}"
 
         # Add headers
-        _header_string = ''
+        _header_string = ""
         for header in headers:
             _header_string += f' -H "{header[0]}: {header[1]}"'
 
@@ -110,9 +111,9 @@ class SshClient:
 
         # Add JSON body
         if json_body is not None:
-            curl += f' --data \'{json.dumps(json_body)}\''
+            curl += f" --data '{json.dumps(json_body)}'"
 
-        curl += f' {url}'
+        curl += f" {url}"
 
         logging.debug(f"Constructed cURL: {curl}.")
         return curl
@@ -143,9 +144,8 @@ class SshClient:
         return _, stdout, stderr
 
     def get_first_page(self, index, body):
-
-        db_url = furl(f'{self.db.host}:{self.db.port}')
-        db_url /= f'{index}/_search'
+        db_url = furl(f"{self.db.host}:{self.db.port}")
+        db_url /= f"{index}/_search"
 
         self._default_scroll = body.pop(SCROLL_PARAM, DEFAULT_SCROLL)
         db_url.args[SCROLL_PARAM] = self._default_scroll
@@ -157,7 +157,7 @@ class SshClient:
 
         logging.info(f"Default size: {self._default_size}")
 
-        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], body)
+        curl = self.build_curl(db_url, "POST", [("Content-Type", "application/json")], body)
 
         _, stdout, stderr = self.execute_ssh_command(curl)
         out, err = stdout.read(), stderr.read()
@@ -165,12 +165,12 @@ class SshClient:
         return out.decode().strip(), err.decode().strip()
 
     def get_scroll(self, scroll_id):
-        db_url = furl(f'{self.db.host}:{self.db.port}')
-        db_url /= '_search/scroll'
+        db_url = furl(f"{self.db.host}:{self.db.port}")
+        db_url /= "_search/scroll"
 
-        data = {'scroll': self._default_scroll, 'scroll_id': scroll_id}
+        data = {"scroll": self._default_scroll, "scroll_id": scroll_id}
 
-        curl = self.build_curl(db_url, 'POST', [('Content-Type', 'application/json')], data)
+        curl = self.build_curl(db_url, "POST", [("Content-Type", "application/json")], data)
 
         _, stdout, stderr = self.execute_ssh_command(curl)
         out, err = stdout.read(), stderr.read()
