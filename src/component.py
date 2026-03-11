@@ -15,6 +15,7 @@ if not hasattr(paramiko, "DSSKey"):
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
+from keboola.utils.header_normalizer import NormalizerStrategy, get_normalizer
 
 from client.es_client import ElasticsearchClient
 from client.ssh_utils import SomeSSHException, get_private_key
@@ -23,6 +24,8 @@ from legacy_client.legacy_es_client import LegacyClient
 from sshtunnel import BaseSSHTunnelForwarderError, SSHTunnelForwarder
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
+
+_header_normalizer = get_normalizer(NormalizerStrategy.DEFAULT)
 
 RSA_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 
@@ -72,7 +75,8 @@ class Component(ComponentBase):
         try:
             with ElasticDictWriter(out_table.full_path, columns) as wr:
                 for result in client.extract_data(index_name, query, include_meta_fields=config.include_meta_fields):
-                    wr.writerow(result)
+                    keys = _header_normalizer.normalize_header([k.lstrip("_") for k in result.keys()])
+                    wr.writerow(dict(zip(keys, result.values())))
                 wr.writeheader()
         except Exception as e:
             raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
