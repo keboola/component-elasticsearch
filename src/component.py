@@ -5,7 +5,12 @@ import os
 import uuid
 
 import dateparser
+import paramiko
 import pytz
+
+# sshtunnel 0.4.0 references paramiko.DSSKey which was removed in paramiko 3.x
+if not hasattr(paramiko, "DSSKey"):
+    paramiko.DSSKey = type("DSSKey", (), {})
 
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
