@@ -66,7 +66,7 @@ class Component(ComponentBase):
 
         try:
             with ElasticDictWriter(out_table.full_path, columns) as wr:
-                for result in client.extract_data(index_name, query):
+                for result in client.extract_data(index_name, query, include_meta_fields=config.include_meta_fields):
                     wr.writerow(result)
                 wr.writeheader()
         except Exception as e:

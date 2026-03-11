@@ -101,6 +101,13 @@
                     "Full Load"
                 ]
             }
+        },
+        "include_meta_fields": {
+            "title": "Include Meta Fields",
+            "description": "When enabled, Elasticsearch metadata fields (<code>_id</code>, <code>_index</code>, <code>_type</code>, <code>_score</code>, <code>_ignored</code>) are merged into each output row.",
+            "type": "boolean",
+            "default": false,
+            "propertyOrder": 700
         }
     }
 }

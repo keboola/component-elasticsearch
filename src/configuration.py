@@ -73,6 +73,7 @@ class Configuration(BaseModel):
     storage_table: str = "ex-elasticsearch-result"
     primary_keys: list[str] = Field(default_factory=list)
     incremental: bool = False
+    include_meta_fields: bool = False
     scheme: str = "http"
     # Legacy SSH dict — present means legacy mode
     ssh: Optional[dict] = None
