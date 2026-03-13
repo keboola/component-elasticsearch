@@ -7,7 +7,7 @@ dependencies = [
     "keboola.component>=1.4.3",
     "keboola.csvwriter",
     "keboola.json-to-csv",
-    "elasticsearch>=8.10.1",
+    "elasticsearch~=8.0", #  beware of bompatibility issues https://www.elastic.co/docs/reference/elasticsearch/clients/python#_compatibility
     "dateparser",
     "paramiko>=3.4.0",
     "retry",
