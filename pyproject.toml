@@ -13,10 +13,10 @@ dependencies = [
     "retry",
     "furl",
     "cryptography>=36.0.2",
-    "sshtunnel>=0.4.0",
     "pydantic>=2.0.0",
     "flake8>=7.3.0",
     "keboola-datadirtest>=2.0.2",
+    "keboola-utils>=1.1.0",
 ]
 
 [dependency-groups]

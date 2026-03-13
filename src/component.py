@@ -10,14 +10,17 @@ import pytz
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 from keboola.csvwriter import ElasticDictWriter
+from keboola.utils.header_normalizer import NormalizerStrategy, get_normalizer
 
 from client.es_client import ElasticsearchClient
+from client.ssh_tunnel import SshTunnel, SshTunnelError
 from client.ssh_utils import SomeSSHException, get_private_key
 from configuration import AuthType, Configuration
 from legacy_client.legacy_es_client import LegacyClient
-from sshtunnel import BaseSSHTunnelForwarderError, SSHTunnelForwarder
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
+
+_header_normalizer = get_normalizer(NormalizerStrategy.DEFAULT)
 
 RSA_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 
@@ -66,8 +69,9 @@ class Component(ComponentBase):
 
         try:
             with ElasticDictWriter(out_table.full_path, columns) as wr:
-                for result in client.extract_data(index_name, query):
-                    wr.writerow(result)
+                for result in client.extract_data(index_name, query, include_meta_fields=config.include_meta_fields):
+                    keys = _header_normalizer.normalize_header([k.lstrip("_") for k in result.keys()])
+                    wr.writerow(dict(zip(keys, result.values())))
                 wr.writeheader()
         except Exception as e:
             raise UserException(f"Error occured while extracting data from Elasticsearch: {e}")
@@ -198,7 +202,7 @@ class Component(ComponentBase):
 
         try:
             self.ssh_server.start()
-        except BaseSSHTunnelForwarderError as e:
+        except SshTunnelError as e:
             raise UserException("Failed to establish SSH connection. Recheck all SSH configuration parameters") from e
 
         logging.info("SSH tunnel is enabled.")
@@ -234,15 +238,15 @@ class Component(ComponentBase):
         except SomeSSHException as e:
             raise UserException(e) from e
 
-        self.ssh_server = SSHTunnelForwarder(
-            ssh_address_or_host=ssh_tunnel_host,
+        self.ssh_server = SshTunnel(
+            ssh_host=ssh_tunnel_host,
             ssh_port=ssh_tunnel_port,
-            ssh_pkey=private_key,
             ssh_username=ssh_username,
-            remote_bind_address=(db_hostname, db_port),
-            local_bind_address=(LOCAL_BIND_ADDRESS, db_port),
-            ssh_config_file=None,
-            allow_agent=False,
+            ssh_pkey=private_key,
+            remote_host=db_hostname,
+            remote_port=db_port,
+            local_host=LOCAL_BIND_ADDRESS,
+            local_port=db_port,
         )
 
 

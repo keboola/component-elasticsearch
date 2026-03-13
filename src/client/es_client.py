@@ -27,30 +27,36 @@ class ElasticsearchClient(Elasticsearch):
 
         super().__init__(**options)
 
-    def extract_data(self, index_name: str, query: str) -> Iterable:
+    META_FIELDS = ("_id", "_index", "_type", "_score", "_ignored")
+
+    def extract_data(self, index_name: str, query: str, include_meta_fields: bool = False) -> Iterable:
         """
         Extracts data from the specified Elasticsearch index based on the given query.
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
             query (dict): Elasticsearch DSL query.
+            include_meta_fields (bool): When True, merges ES metadata fields (_id, _index, etc.) into each row.
 
         Yields:
             dict
         """
         response = self.search(index=index_name, size=DEFAULT_SIZE, scroll=SCROLL_TIMEOUT, body=query)
-        for r in self._process_response(response):
+        for r in self._process_response(response, include_meta_fields):
             yield r
 
         while len(response["hits"]["hits"]):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
-            for r in self._process_response(response):
+            for r in self._process_response(response, include_meta_fields):
                 yield r
 
-    def _process_response(self, response: dict) -> Iterable:
-        results = [hit["_source"] for hit in response["hits"]["hits"]]
-        for result in results:
-            yield self.flatten_json(result)
+    def _process_response(self, response: dict, include_meta_fields: bool = False) -> Iterable:
+        for hit in response["hits"]["hits"]:
+            row = self.flatten_json(hit["_source"])
+            if include_meta_fields:
+                meta = {field: hit.get(field) for field in self.META_FIELDS if field in hit}
+                row = {**meta, **row}
+            yield row
 
     def ping(
         self,

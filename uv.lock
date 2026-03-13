@@ -295,10 +295,10 @@ dependencies = [
     { name = "keboola-csvwriter" },
     { name = "keboola-datadirtest" },
     { name = "keboola-json-to-csv" },
+    { name = "keboola-utils" },
     { name = "paramiko" },
     { name = "pydantic" },
     { name = "retry" },
-    { name = "sshtunnel" },
 ]
 
 [package.dev-dependencies]
@@ -319,10 +319,10 @@ requires-dist = [
     { name = "keboola-csvwriter" },
     { name = "keboola-datadirtest", specifier = ">=2.0.2" },
     { name = "keboola-json-to-csv" },
+    { name = "keboola-utils", specifier = ">=1.1.0" },
     { name = "paramiko", specifier = ">=3.4.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "retry" },
-    { name = "sshtunnel", specifier = ">=0.4.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -375,6 +375,19 @@ sdist = { url = "https://files.pythonhosted.org/packages/ff/b3/a247f720f355127a7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/58/acc05d8bb859c65af6cd100eb30b28e53d366d75b0cc786a7b66455d3f8f/keboola.json_to_csv-0.0.12-py3-none-any.whl", hash = "sha256:163213dd61f19fb5bb23cd8a763b5531a3aba2efaa5bdba6737fe61a3489fb3e", size = 17054 },
     { url = "https://files.pythonhosted.org/packages/a8/d7/f65086d9d2935cb18e2405bdfb5d46312c4bf69d8027dd78363812c6b960/keboola_json_to_csv-0.0.12-py3-none-any.whl", hash = "sha256:48fc9fb5ee95b148741d79c53182e76bc274176ed865db9115dea9938ffb15a7", size = 17132 },
+]
+
+[[package]]
+name = "keboola-utils"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dateparser" },
+    { name = "pytz" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/b8/ccfddc2eb510f7a6ab878ab8a6249a23494194780a436676da6c2f5d23c7/keboola.utils-1.1.0.tar.gz", hash = "sha256:e943dbda932d945bcd5edd51283eea8f7035249c9dac769d3e96d2f507b52f60", size = 9830 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/f4/6697a0c2ff512baa7b84413972e51d5449a0a145f68dc750f05a8b1da39d/keboola.utils-1.1.0-py3-none-any.whl", hash = "sha256:8c73faa4a81f371a2eecd8465b08a51b3f7608969dd91d38d5b3bcfad7ef0da5", size = 10131 },
 ]
 
 [[package]]
@@ -651,18 +664,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235 },
-]
-
-[[package]]
-name = "sshtunnel"
-version = "0.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "paramiko" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/ad/4c587adf79865be268ee0b6bd52cfaa7a75d827a23ced072dc5ab554b4af/sshtunnel-0.4.0.tar.gz", hash = "sha256:e7cb0ea774db81bf91844db22de72a40aae8f7b0f9bb9ba0f666d474ef6bf9fc", size = 62716 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/13/8476c4328dcadfe26f8bd7f3a1a03bf9ddb890a7e7b692f54a179bc525bf/sshtunnel-0.4.0-py2.py3-none-any.whl", hash = "sha256:98e54c26f726ab8bd42b47a3a21fca5c3e60f58956f0f70de2fb8ab0046d0606", size = 24729 },
 ]
 
 [[package]]
