@@ -1,0 +1,25 @@
+{
+  "storage": {
+    "input": {
+      "files": [],
+      "tables": []
+    },
+    "output": {
+      "files": [],
+      "tables": []
+    }
+  },
+  "parameters": {
+    "db": {
+      "hostname": "elasticsearch8",
+      "port": 9200
+    },
+    "authentication": {
+      "auth_type": "no_auth"
+    },
+    "index_name": "test-users",
+    "request_body": "{\"query\": {\"bool\": {\"must\": [{\"term\": {\"active\": true}}, {\"range\": {\"age\": {\"gte\": 18}}}]}}, \"sort\": [{\"user_id\": \"asc\"}]}",
+    "storage_table": "test-users",
+    "include_meta_fields": true
+  }
+}
