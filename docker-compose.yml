@@ -28,6 +28,21 @@ services:
     ports:
       - "9200:9200"
 
+  elasticsearch8:
+    image: elasticsearch:8.19.12
+    container_name: elasticsearch8
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health?wait_for_status=yellow"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    ports:
+      - "9201:9200"
+
   test:
     # Use to run flake8 and unittests checks
     build: .
@@ -38,6 +53,8 @@ services:
       - KBC_DATADIR=./data
     depends_on:
       elasticsearch:
+        condition: service_healthy
+      elasticsearch8:
         condition: service_healthy
     command:
       - /bin/sh

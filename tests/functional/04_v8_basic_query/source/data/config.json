@@ -1,0 +1,24 @@
+{
+  "storage": {
+    "input": {
+      "files": [],
+      "tables": []
+    },
+    "output": {
+      "files": [],
+      "tables": []
+    }
+  },
+  "parameters": {
+    "db": {
+      "hostname": "elasticsearch8",
+      "port": 9200
+    },
+    "authentication": {
+      "auth_type": "no_auth"
+    },
+    "index_name": "test-products",
+    "request_body": "{\"query\": {\"match_all\": {}}, \"sort\": [{\"product_id\": \"asc\"}]}",
+    "storage_table": "test-products"
+  }
+}
