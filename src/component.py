@@ -20,7 +20,7 @@ from legacy_client.legacy_es_client import LegacyClient
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
 
-_header_normalizer = get_normalizer(NormalizerStrategy.DEFAULT)
+_header_normalizer = get_normalizer(NormalizerStrategy.DEFAULT, forbidden_sub="_")
 
 RSA_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 
