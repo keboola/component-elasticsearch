@@ -7,6 +7,7 @@ from elasticsearch.exceptions import ApiError, TransportError
 
 DEFAULT_SIZE = 10_000
 SCROLL_TIMEOUT = "15m"
+DEFAULT_PIT_KEEP_ALIVE = "5m"
 
 
 class ElasticsearchClientException(Exception):
@@ -31,7 +32,7 @@ class ElasticsearchClient(Elasticsearch):
 
     def extract_data(self, index_name: str, query: str, include_meta_fields: bool = False) -> Iterable:
         """
-        Extracts data from the specified Elasticsearch index based on the given query.
+        Extracts data using the Scroll API.
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
@@ -49,6 +50,48 @@ class ElasticsearchClient(Elasticsearch):
             response = self.scroll(scroll_id=response["_scroll_id"], scroll=SCROLL_TIMEOUT)
             for r in self._process_response(response, include_meta_fields):
                 yield r
+
+    def extract_data_pit(
+        self, index_name: str, query: dict, include_meta_fields: bool = False, keep_alive: str = DEFAULT_PIT_KEEP_ALIVE
+    ) -> Iterable:
+        """
+        Extracts data using PIT (Point-in-Time) + search_after pagination.
+
+        Parameters:
+            index_name (str): Name of the Elasticsearch index.
+            query (dict): Elasticsearch DSL query.
+            include_meta_fields (bool): When True, merges ES metadata fields into each row.
+            keep_alive (str): How long the PIT should be kept alive between requests.
+
+        Yields:
+            dict
+        """
+        pit = self.open_point_in_time(index=index_name, keep_alive=keep_alive)
+        pit_id = pit["id"]
+
+        try:
+            search_body = {**query, "size": DEFAULT_SIZE, "pit": {"id": pit_id, "keep_alive": keep_alive}}
+
+            if "sort" not in search_body:
+                search_body["sort"] = [{"_shard_doc": "asc"}]
+
+            response = self.search(body=search_body)
+            for r in self._process_response(response, include_meta_fields):
+                yield r
+
+            while len(response["hits"]["hits"]):
+                last_hit = response["hits"]["hits"][-1]
+                search_body["search_after"] = last_hit["sort"]
+                search_body["pit"] = {"id": response.get("pit_id", pit_id), "keep_alive": keep_alive}
+
+                response = self.search(body=search_body)
+                for r in self._process_response(response, include_meta_fields):
+                    yield r
+        finally:
+            try:
+                self.close_point_in_time(id=pit_id)
+            except (ApiError, TransportError):
+                pass
 
     def _process_response(self, response: dict, include_meta_fields: bool = False) -> Iterable:
         for hit in response["hits"]["hits"]:

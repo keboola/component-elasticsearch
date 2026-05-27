@@ -108,6 +108,35 @@
             "type": "boolean",
             "default": false,
             "propertyOrder": 700
+        },
+        "search_method": {
+            "title": "Search Method",
+            "description": "Choose the pagination method for extracting data. <strong>Scroll API</strong> is the legacy default. <strong>PIT + search_after</strong> uses Point-in-Time snapshots and is recommended for Elasticsearch 7.10+ as it is more efficient for large datasets and avoids keeping scroll contexts open.",
+            "type": "string",
+            "enum": [
+                "scroll",
+                "search_after"
+            ],
+            "default": "scroll",
+            "options": {
+                "enum_titles": [
+                    "Scroll API",
+                    "PIT + search_after"
+                ]
+            },
+            "propertyOrder": 800
+        },
+        "pit_keep_alive": {
+            "title": "PIT Keep Alive",
+            "description": "How long the Point-in-Time snapshot should be kept alive between pagination requests (e.g. <code>5m</code>, <code>10m</code>). Only applies when using <strong>PIT + search_after</strong> method.",
+            "type": "string",
+            "default": "5m",
+            "propertyOrder": 900,
+            "options": {
+                "dependencies": {
+                    "search_method": "search_after"
+                }
+            }
         }
     }
 }

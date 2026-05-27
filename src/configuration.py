@@ -13,6 +13,11 @@ class AuthType(str, Enum):
     no_auth = "no_auth"
 
 
+class SearchMethod(str, Enum):
+    scroll = "scroll"
+    search_after = "search_after"
+
+
 class DbConfig(BaseModel):
     hostname: str
     port: int
@@ -74,6 +79,8 @@ class Configuration(BaseModel):
     primary_keys: list[str] = Field(default_factory=list)
     incremental: bool = False
     include_meta_fields: bool = False
+    search_method: SearchMethod = SearchMethod.scroll
+    pit_keep_alive: str = "5m"
     scheme: str = "http"
     # Legacy SSH dict — present means legacy mode
     ssh: Optional[dict] = None
