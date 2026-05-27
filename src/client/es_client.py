@@ -76,13 +76,15 @@ class ElasticsearchClient(Elasticsearch):
                 search_body["sort"] = [{"_shard_doc": "asc"}]
 
             response = self.search(body=search_body)
+            pit_id = response.get("pit_id", pit_id)
             for r in self._process_response(response, include_meta_fields):
                 yield r
 
             while len(response["hits"]["hits"]):
                 last_hit = response["hits"]["hits"][-1]
                 search_body["search_after"] = last_hit["sort"]
-                search_body["pit"] = {"id": response.get("pit_id", pit_id), "keep_alive": keep_alive}
+                pit_id = response.get("pit_id", pit_id)
+                search_body["pit"] = {"id": pit_id, "keep_alive": keep_alive}
 
                 response = self.search(body=search_body)
                 for r in self._process_response(response, include_meta_fields):
