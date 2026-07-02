@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Keboola Connection Elasticsearch Extractor"
 requires-python = "~=3.13.0"
 dependencies = [
-    "keboola.component>=1.4.3",
+    "keboola.component>=1.11.0",
     "keboola.csvwriter",
     "keboola.json-to-csv",
     "elasticsearch~=8.0", #  beware of compatibility issues https://www.elastic.co/docs/reference/elasticsearch/clients/python#_compatibility
