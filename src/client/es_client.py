@@ -59,7 +59,8 @@ class ElasticsearchClient(Elasticsearch):
 
         Parameters:
             index_name (str): Name of the Elasticsearch index.
-            query (dict): Elasticsearch DSL query.
+            query (dict): Elasticsearch DSL query. A "size" set in the query is used as the page size,
+                DEFAULT_SIZE is applied only when the query does not specify it.
             include_meta_fields (bool): When True, merges ES metadata fields into each row.
             keep_alive (str): How long the PIT should be kept alive between requests.
 
@@ -70,7 +71,8 @@ class ElasticsearchClient(Elasticsearch):
         pit_id = pit["id"]
 
         try:
-            search_body = {**query, "size": DEFAULT_SIZE, "pit": {"id": pit_id, "keep_alive": keep_alive}}
+            search_body = {**query, "pit": {"id": pit_id, "keep_alive": keep_alive}}
+            search_body.setdefault("size", DEFAULT_SIZE)
 
             if "sort" not in search_body:
                 search_body["sort"] = [{"_shard_doc": "asc"}]
