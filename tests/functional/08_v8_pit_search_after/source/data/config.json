@@ -1,0 +1,26 @@
+{
+  "storage": {
+    "input": {
+      "files": [],
+      "tables": []
+    },
+    "output": {
+      "files": [],
+      "tables": []
+    }
+  },
+  "parameters": {
+    "db": {
+      "hostname": "elasticsearch8",
+      "port": 9200
+    },
+    "authentication": {
+      "auth_type": "no_auth"
+    },
+    "index_name": "test-audit-log",
+    "request_body": "{\"query\": {\"match_all\": {}}, \"sort\": [{\"created_at\": \"asc\"}], \"size\": 2}",
+    "search_method": "search_after",
+    "pit_keep_alive": "5m",
+    "storage_table": "test-audit-log"
+  }
+}

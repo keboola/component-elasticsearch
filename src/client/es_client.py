@@ -75,6 +75,10 @@ class ElasticsearchClient(Elasticsearch):
             search_body = {**query, "pit": {"id": pit_id, "keep_alive": keep_alive}}
             search_body.setdefault("size", DEFAULT_SIZE)
 
+            # A unique sort tiebreaker is required for search_after to page without skipping or
+            # duplicating hits. Elasticsearch adds an implicit `_shard_doc` tiebreaker to every
+            # PIT search, so a user-supplied sort is already safe; we only set an explicit sort
+            # when the query has none, to guarantee a deterministic order.
             if "sort" not in search_body:
                 search_body["sort"] = [{"_shard_doc": "asc"}]
 

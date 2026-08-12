@@ -1,9 +1,13 @@
 """Pydantic configuration models for the Elasticsearch component."""
 
+import re
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
+
+# Elasticsearch time value, e.g. "5m", "30s", "1h", "2d". Used to validate pit_keep_alive.
+_ES_TIME_VALUE_RE = re.compile(r"^\d+(nanos|micros|ms|s|m|h|d)$")
 
 
 class AuthType(str, Enum):
@@ -86,3 +90,19 @@ class Configuration(BaseModel):
     ssh: Optional[dict] = None
 
     model_config = {"populate_by_name": True}
+
+    @model_validator(mode="after")
+    def validate_pit_keep_alive(self) -> "Configuration":
+        # Only enforced for the PIT + search_after path; the scroll path never reads this value,
+        # so existing scroll configs (which default to "5m") are unaffected.
+        if self.search_method != SearchMethod.search_after:
+            return self
+        normalized = self.pit_keep_alive.strip()
+        if not _ES_TIME_VALUE_RE.match(normalized):
+            raise ValueError(
+                "pit_keep_alive must be an Elasticsearch time value such as '5m', '30s', '1h' or '2d' "
+                f"(got '{self.pit_keep_alive}')."
+            )
+        # Store the trimmed value so it is sent to Elasticsearch exactly as validated.
+        self.pit_keep_alive = normalized
+        return self
