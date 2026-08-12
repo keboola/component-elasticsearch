@@ -15,7 +15,7 @@ from keboola.utils.header_normalizer import NormalizerStrategy, get_normalizer
 from client.es_client import ElasticsearchClient
 from client.ssh_tunnel import SshTunnel, SshTunnelError
 from client.ssh_utils import SomeSSHException, get_private_key
-from configuration import AuthType, Configuration
+from configuration import AuthType, Configuration, SearchMethod
 from legacy_client.legacy_es_client import LegacyClient
 
 LOCAL_BIND_ADDRESS = "127.0.0.1"
@@ -68,8 +68,21 @@ class Component(ComponentBase):
         )
 
         try:
+            if config.search_method == SearchMethod.search_after:
+                logging.info("Using PIT + search_after pagination.")
+                data_iter = client.extract_data_pit(
+                    index_name, query,
+                    include_meta_fields=config.include_meta_fields,
+                    keep_alive=config.pit_keep_alive,
+                )
+            else:
+                logging.info("Using Scroll API pagination.")
+                data_iter = client.extract_data(
+                    index_name, query, include_meta_fields=config.include_meta_fields
+                )
+
             with ElasticDictWriter(out_table.full_path, columns) as wr:
-                for result in client.extract_data(index_name, query, include_meta_fields=config.include_meta_fields):
+                for result in data_iter:
                     keys = _header_normalizer.normalize_header([k.lstrip("_") for k in result.keys()])
                     wr.writerow(dict(zip(keys, result.values())))
                 wr.writeheader()
