@@ -1,4 +1,5 @@
 import json
+import logging
 import typing as t
 from typing import Iterable
 
@@ -94,8 +95,11 @@ class ElasticsearchClient(Elasticsearch):
         finally:
             try:
                 self.close_point_in_time(id=pit_id)
-            except (ApiError, TransportError):
-                pass
+            except (ApiError, TransportError) as e:
+                logging.warning(
+                    f"Failed to close the Point-in-Time {pit_id}: {e}. "
+                    f"It will stay open on the Elasticsearch cluster until its keep_alive ({keep_alive}) expires."
+                )
 
     def _process_response(self, response: dict, include_meta_fields: bool = False) -> Iterable:
         for hit in response["hits"]["hits"]:
