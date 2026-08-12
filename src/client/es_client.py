@@ -31,7 +31,7 @@ class ElasticsearchClient(Elasticsearch):
 
     META_FIELDS = ("_id", "_index", "_type", "_score", "_ignored")
 
-    def extract_data(self, index_name: str, query: str, include_meta_fields: bool = False) -> Iterable:
+    def extract_data(self, index_name: str, query: dict, include_meta_fields: bool = False) -> Iterable:
         """
         Extracts data using the Scroll API.
 
